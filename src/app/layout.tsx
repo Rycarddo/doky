@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ThemeProvider, ModeToggle } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,23 +26,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen w-screen overflow-hidden`}
-        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen w-screen overflow-x-hidden`}
       >
-        <SidebarProvider>
-          {/* Container geral: sidebar + conteúdo */}
-          <div className="flex h-full w-full">
-            <AppSidebar />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SidebarProvider>
+            {/* Container geral: sidebar + conteúdo */}
+            <div className="flex h-full w-full">
+              <AppSidebar />
 
-            {/* Área restante */}
-            <main className="flex-1 min-w-0 overflow-hidden">
-              {/* Conteúdo da rota (tabela) */}
-              <div className="overflow-auto px-4 pb-4">{children}</div>
-            </main>
-          </div>
-        </SidebarProvider>
+              {/* Área restante */}
+              <main className="flex-1 min-w-0">
+                {/* Conteúdo da rota (tabela) */}
+                <div className="overflow-auto px-4 pb-4">{children}</div>
+              </main>
+            </div>
+          </SidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

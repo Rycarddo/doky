@@ -15,6 +15,7 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { ModeToggle } from "@/components/theme-provider";
 
 // This is sample data.
 const data = {
@@ -48,21 +49,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <DatePicker />
         <SidebarSeparator className="mx-0" />
-        <SidebarContent className="ml-2">
-          <SidebarMenuButton className="h-10" variant={"currentSection"}>
-            <FileText />
-            <p>Processos</p>
-          </SidebarMenuButton>
-          <SidebarMenuButton className="h-10">
-            <FileStack />
-            <p>Modelos</p>
-          </SidebarMenuButton>
-          <SidebarMenuButton className="h-10">
-            <GraduationCap />
-            <p>Tutoriais</p>
-          </SidebarMenuButton>
+        <SidebarContent className="flex">
+          <SidebarContent className="ml-2">
+            <SidebarMenuButton className="h-10" variant={"currentSection"}>
+              <FileText />
+              <p>Processos</p>
+            </SidebarMenuButton>
+            <SidebarMenuButton className="h-10">
+              <FileStack />
+              <p>Modelos</p>
+            </SidebarMenuButton>
+            <SidebarMenuButton className="h-10">
+              <GraduationCap />
+              <p>Tutoriais</p>
+            </SidebarMenuButton>
+          </SidebarContent>
         </SidebarContent>
       </SidebarContent>
+      <SidebarFooter className="mt-auto flex items-end justify-end p-2">
+        <ModeToggle />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
