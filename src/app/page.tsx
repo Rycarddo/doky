@@ -156,7 +156,7 @@ const Home = () => {
     <>
       <div className="flex items-center justify-between mx-4">
         <div className="flex items-center gap-2">
-          <SearchProcess />
+          <SearchProcess searchText="Digite o SIGAD ou assunto..." />
 
           <Filter
             currentFilter={currentFilter}
@@ -171,13 +171,13 @@ const Home = () => {
         {/* Deverá virar componente */}
         <TableHeader>
           <TableRow>
-            <TableHead>SIGAD</TableHead>
+            <TableHead className="w-fit">SIGAD</TableHead>
             <TableHead>Prioridade</TableHead>
             <TableHead>Assunto</TableHead>
             <TableHead>Início</TableHead>
             <TableHead>Responsável</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Última atualização</TableHead>
+            <TableHead className="w-fit">Última atualização</TableHead>
             <TableHead>Prazo</TableHead>
             <TableHead>Edit</TableHead>
           </TableRow>
@@ -207,9 +207,9 @@ const Home = () => {
             </TableRow>
           ))}
         </TableBody>
-        <TableFooter>
+        <TableFooter className="w-fit">
           <TableRow>
-            <TableCell>Total de documentos:</TableCell>
+            <TableCell>Documentos:</TableCell>
             <TableCell>{filteredDocuments.length}</TableCell>
           </TableRow>
         </TableFooter>

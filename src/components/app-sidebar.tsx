@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "next/link";
 import { Plus, FileText, FileStack, GraduationCap } from "lucide-react";
 
 import { Calendars } from "@/components/calendars";
@@ -16,6 +17,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/theme-provider";
+import { models } from "../app/modelos/page";
 
 // This is sample data.
 const data = {
@@ -53,15 +55,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarContent className="ml-2">
             <SidebarMenuButton className="h-10" variant={"currentSection"}>
               <FileText />
-              <p>Processos</p>
+              <Link href="/">Processos</Link>
             </SidebarMenuButton>
             <SidebarMenuButton className="h-10">
               <FileStack />
-              <p>Modelos</p>
+              <Link href="/modelos">Modelos</Link>
             </SidebarMenuButton>
             <SidebarMenuButton className="h-10">
               <GraduationCap />
-              <p>Tutoriais</p>
+              <Link href="/tracker" className="cursor-pointer">
+                Tracker
+              </Link>
             </SidebarMenuButton>
           </SidebarContent>
         </SidebarContent>
