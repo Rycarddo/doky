@@ -17,7 +17,6 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/theme-provider";
-import { models } from "../app/modelos/page";
 
 // This is sample data.
 const data = {
