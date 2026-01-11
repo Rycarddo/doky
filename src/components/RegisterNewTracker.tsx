@@ -27,7 +27,7 @@ export const RegisterNewTracker = () => {
         <Dialog>
           <DialogTrigger asChild>
             <Button className="rounded-full bg-green-700 hover:bg-green-600 cursor-pointer">
-              Cadastrar novo
+              Cadastrar novo Tracker
             </Button>
           </DialogTrigger>
 
@@ -36,7 +36,9 @@ export const RegisterNewTracker = () => {
               <DialogTitle>Cadastrar novo Tracker</DialogTitle>
             </DialogHeader>
 
-            <div className="flex items-center gap-2">
+            <Separator />
+
+            <div className="flex items-center gap-2 my-2">
               <Input className="w-100 rounded-full" />
               <Button className="rounded-full">Adiciontar tarefa</Button>
             </div>
@@ -62,7 +64,9 @@ export const RegisterNewTracker = () => {
               </TableBody>
             </Table>
 
-            <Button className="self-end w-fit rounded-full">Cadastrar</Button>
+            <Button className="justify-self-end w-fit rounded-full">
+              Cadastrar
+            </Button>
           </DialogContent>
         </Dialog>
       </div>

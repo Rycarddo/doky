@@ -12,7 +12,7 @@ export const DocumentModelDialog = () => {
       <DialogTrigger asChild>
         <Expand className="cursor-pointer" />
       </DialogTrigger>
-      <DialogContent className="h-100">
+      <DialogContent className="h-screen w-7/10">
         <DialogTitle>Nome do modelo</DialogTitle>
         <div className="flex items-center gap-4 justify-end">
           <Edit className="cursor-pointer" />
@@ -20,10 +20,7 @@ export const DocumentModelDialog = () => {
           <Trash2 className="cursor-pointer" />
         </div>
         <div className="w-100">
-          <Textarea
-            className="w-full h-full"
-            value={`Ao cumprimentá-lo respeitosamente...`}
-          />
+          <Textarea className="w-full h-full" />
         </div>
       </DialogContent>
     </Dialog>

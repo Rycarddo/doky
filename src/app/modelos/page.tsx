@@ -1,5 +1,7 @@
 import { DocumentModelDialog } from "@/components/DocumentModelDialog";
+import { RegisterNewModel } from "@/components/RegisterNewModel";
 import { SearchProcess } from "@/components/SearchProcess";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -13,11 +15,13 @@ import { Expand } from "lucide-react";
 const models = () => {
   return (
     <>
-      <div className="w-full ">
+      <div className="flex items-center justify-between px-4 w-full">
         <SearchProcess
           searchText="Digite o assunto do modelo buscado..."
           width={"full"}
         />
+
+        <RegisterNewModel />
       </div>
 
       <Table>
