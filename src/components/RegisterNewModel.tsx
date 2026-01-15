@@ -12,6 +12,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
+import { clsx } from "clsx";
 
 export const RegisterNewModel = () => {
   return (
@@ -21,22 +22,22 @@ export const RegisterNewModel = () => {
           Cadastrar modelo
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-full">
         <DialogTitle>Cadastrar novo modelo</DialogTitle>
 
         <Separator />
 
         <div className="flex flex-col gap-8 my-2">
-          <div className="flex items-center w-full">
-            <Label htmlFor="assunto" className="w-full">
-              Assunto do modelo
-            </Label>
+          <div className="flex items-center">
+            <Label htmlFor="assunto">Assunto do modelo</Label>
             <Input name="assunto" />
           </div>
 
           <Textarea placeholder="Digite aqui o texto do documento..." />
 
-          <Button className="rounded-full w-fit">Cadastrar modelo</Button>
+          <div className="flex justify-end">
+            <Button className="rounded-full w-fit">Cadastrar modelo</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

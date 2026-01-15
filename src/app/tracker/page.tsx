@@ -34,13 +34,15 @@ const TrackerPage = () => {
         </TableHeader>
 
         <TableBody>
-          <TableCell>
-            Assunto Assunto Assunto Assunto Assunto Assunto Assunto Assunto
-            Assunto Assunto
-          </TableCell>
-          <TableCell>
-            <TrackerDialog />
-          </TableCell>
+          <TableRow>
+            <TableCell>
+              Assunto Assunto Assunto Assunto Assunto Assunto Assunto Assunto
+              Assunto Assunto
+            </TableCell>
+            <TableCell>
+              <TrackerDialog />
+            </TableCell>
+          </TableRow>
         </TableBody>
       </Table>
     </>

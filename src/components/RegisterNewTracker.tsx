@@ -54,19 +54,21 @@ export const RegisterNewTracker = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableCell>Tarefa 1</TableCell>
-                <TableCell>
-                  <Edit />
-                </TableCell>
-                <TableCell>
-                  <Trash2 />
-                </TableCell>
+                <TableRow>
+                  <TableCell>Tarefa 1</TableCell>
+                  <TableCell>
+                    <Edit />
+                  </TableCell>
+                  <TableCell>
+                    <Trash2 />
+                  </TableCell>
+                </TableRow>
               </TableBody>
             </Table>
 
-            <Button className="justify-self-end w-fit rounded-full">
-              Cadastrar
-            </Button>
+            <div className="flex justify-end mt-4">
+              <Button className="w-fit rounded-full">Cadastrar</Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

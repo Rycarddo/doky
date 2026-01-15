@@ -34,13 +34,15 @@ const models = () => {
         </TableHeader>
 
         <TableBody>
-          <TableCell>
-            Assunto Assunto Assunto Assunto Assunto Assunto Assunto Assunto
-            Assunto Assunto
-          </TableCell>
-          <TableCell>
-            <DocumentModelDialog />
-          </TableCell>
+          <TableRow>
+            <TableCell>
+              Assunto Assunto Assunto Assunto Assunto Assunto Assunto Assunto
+              Assunto Assunto
+            </TableCell>
+            <TableCell>
+              <DocumentModelDialog />
+            </TableCell>
+          </TableRow>
         </TableBody>
       </Table>
     </>
