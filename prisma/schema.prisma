@@ -8,26 +8,110 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String    @id @default(uuid())
-  username  String
-  email     String    @unique
-  processes Process[] @relation("UserProcesses")
+// ENUMs are things that has predictable values
+// The priority of a process can be only NORMAL or HIGH
+
+enum ProcessPriority {
+  NORMAL
+  HIGH
 }
 
+enum ProcessStatus {
+  IN_PROGRESS
+  DONE
+}
+
+// Models
+
 model Process {
-  sigad     String    @id
-  priority  String
-  subject   String
-  deadline  DateTime?
-  createdAt DateTime  @default(now())
-  tracker   String?
+  // At this system, SIGAD will be equivalent to an ID
+  sigad String @id
+
+  priority ProcessPriority @default(NORMAL)
+  subject  String
+
+  status ProcessStatus @default(IN_PROGRESS)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Will be optional, so if the user dont set a deadline the backend needs to do the current date + 14 days
+  deadline DateTime?
 
   creatorId String
-  creator   User   @relation("UserProcesses", fields: [creatorId], references: [id])
+  creator   User   @relation(fields: [creatorId], references: [id])
+
+  history ProcessHistory[]
+
+  trackerId String?
+  tracker   Tracker? @relation(fields: [trackerId], references: [id])
+
+  tasks ProcessTask[]
+}
+
+model User {
+  id       String @id @default(uuid())
+  username String
+  email    String @unique
+
+  processes Process[]
+  history   ProcessHistory[]
+}
+
+model ProcessHistory {
+  id   String @id @default(uuid())
+  text String
+
+  processSigad String
+  process      Process @relation(fields: [processSigad], references: [sigad], onDelete: Cascade)
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 model Tracker {
-  trackerId   String @id @unique
-  trackerName String @unique
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  tasks TrackerTask[]
+
+  processes Process[]
+}
+
+model TrackerTask {
+  id    String @id @default(uuid())
+  title String
+  order Int
+
+  trackerId    String
+  tracker      Tracker       @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  processTasks ProcessTask[]
+
+  @@unique([trackerId, order])
+}
+
+model ProcessTask {
+  id String @id @default(uuid())
+
+  processSigad String
+  process      Process @relation(fields: [processSigad], references: [sigad], onDelete: Cascade)
+
+  trackerTaskId String
+  trackerTask   TrackerTask @relation(fields: [trackerTaskId], references: [id], onDelete: Cascade)
+
+  done Boolean @default(false)
+
+  @@unique([processSigad, trackerTaskId])
+}
+
+model DocumentTemplate {
+  id   String @id @default(uuid())
+  name String @unique
+  text String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
