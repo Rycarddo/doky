@@ -6,9 +6,26 @@ import { Calendar } from "./ui/calendar";
 import { Label } from "./ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
-export const Deadline = () => {
+type DeadlineProps = {
+  date?: Date;
+  onDateChange?: (date: Date | undefined) => void;
+};
+
+export const Deadline = ({ date: controlledDate, onDateChange }: DeadlineProps = {}) => {
   const [openDate, setOpenDate] = React.useState(false);
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
+  const [localDate, setLocalDate] = React.useState<Date | undefined>(undefined);
+
+  const isControlled = onDateChange !== undefined;
+  const date = isControlled ? controlledDate : localDate;
+
+  const handleSelect = (selected: Date | undefined) => {
+    if (isControlled) {
+      onDateChange!(selected);
+    } else {
+      setLocalDate(selected);
+    }
+    setOpenDate(false);
+  };
 
   return (
     <div className="flex items-center gap-4 mt-4">
@@ -20,7 +37,7 @@ export const Deadline = () => {
             data-empty={!date}
             className="data-[empty=true]:text-muted-foreground w-fit justify-start text-left font-normal"
           >
-            {date ? date.toLocaleDateString() : "Selecione uma data"}
+            {date ? date.toLocaleDateString("pt-BR") : "Selecione uma data"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto overflow-hidden p-0" align="start">
@@ -28,10 +45,7 @@ export const Deadline = () => {
             mode="single"
             selected={date}
             captionLayout="dropdown"
-            onSelect={(date) => {
-              setDate(date);
-              setOpenDate(false);
-            }}
+            onSelect={handleSelect}
           />
         </PopoverContent>
       </Popover>

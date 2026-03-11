@@ -5,11 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
-
-// ENUMs are things that has predictable values
-// The priority of a process can be only NORMAL or HIGH
 
 enum ProcessPriority {
   NORMAL
@@ -21,22 +17,16 @@ enum ProcessStatus {
   DONE
 }
 
-// Models
-
 model Process {
-  // At this system, SIGAD will be equivalent to an ID
-  sigad String @id
-
-  priority ProcessPriority @default(NORMAL)
-  subject  String
-
-  status ProcessStatus @default(IN_PROGRESS)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Will be optional, so if the user dont set a deadline the backend needs to do the current date + 14 days
-  deadline DateTime?
+  id            String          @id @default(uuid())
+  sigad         String          @unique
+  priority      ProcessPriority @default(NORMAL)
+  subject       String
+  status        ProcessStatus   @default(IN_PROGRESS)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deadline      DateTime?
+  linkedProcess String?
 
   creatorId String
   creator   User   @relation(fields: [creatorId], references: [id])
@@ -54,16 +44,18 @@ model User {
   username String
   email    String @unique
 
-  processes Process[]
-  history   ProcessHistory[]
+  processes   Process[]
+  history     ProcessHistory[]
+  ocomHistory OcomHistory[]
 }
 
 model ProcessHistory {
-  id   String @id @default(uuid())
-  text String
+  id    String  @id @default(uuid())
+  text  String
+  sigad String?
 
-  processSigad String
-  process      Process @relation(fields: [processSigad], references: [sigad], onDelete: Cascade)
+  processId String
+  process   Process @relation(fields: [processId], references: [id], onDelete: Cascade)
 
   creatorId String
   creator   User   @relation(fields: [creatorId], references: [id])
@@ -76,6 +68,9 @@ model Tracker {
   name      String   @unique
   createdAt DateTime @default(now())
 
+  documentTemplateId String?
+  documentTemplate   DocumentTemplate? @relation("TrackerTemplate", fields: [documentTemplateId], references: [id])
+
   tasks TrackerTask[]
 
   processes Process[]
@@ -86,8 +81,12 @@ model TrackerTask {
   title String
   order Int
 
-  trackerId    String
-  tracker      Tracker       @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  trackerId String
+  tracker   Tracker @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+
+  documentTemplateId String?
+  documentTemplate   DocumentTemplate? @relation("TrackerTaskTemplate", fields: [documentTemplateId], references: [id])
+
   processTasks ProcessTask[]
 
   @@unique([trackerId, order])
@@ -96,15 +95,46 @@ model TrackerTask {
 model ProcessTask {
   id String @id @default(uuid())
 
-  processSigad String
-  process      Process @relation(fields: [processSigad], references: [sigad], onDelete: Cascade)
+  processId String
+  process   Process @relation(fields: [processId], references: [id], onDelete: Cascade)
 
   trackerTaskId String
   trackerTask   TrackerTask @relation(fields: [trackerTaskId], references: [id], onDelete: Cascade)
 
   done Boolean @default(false)
 
-  @@unique([processSigad, trackerTaskId])
+  @@unique([processId, trackerTaskId])
+}
+
+model OcomProcess {
+  id               String    @id @default(uuid())
+  processo         String
+  categoria        String
+  desigTelegrafica String
+  localidade       String
+  empresa          String?
+  situacao         String    @default("EM ANDAMENTO")
+  prazo            DateTime?
+  anoInicio        Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  history OcomHistory[]
+}
+
+model OcomHistory {
+  id   String @id @default(uuid())
+  text String
+
+  ocomProcessId String
+  ocomProcess   OcomProcess @relation(fields: [ocomProcessId], references: [id], onDelete: Cascade)
+
+  creatorId String
+  creator   User   @relation(fields: [creatorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 model DocumentTemplate {
@@ -114,4 +144,7 @@ model DocumentTemplate {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  trackers     Tracker[]     @relation("TrackerTemplate")
+  trackerTasks TrackerTask[] @relation("TrackerTaskTemplate")
 }

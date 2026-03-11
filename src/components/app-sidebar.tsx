@@ -1,8 +1,10 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
-import { Plus, FileText, FileStack, GraduationCap } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { FileText, FileStack, GraduationCap } from "lucide-react";
 
-import { Calendars } from "@/components/calendars";
 import { DatePicker } from "@/components/date-picker";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -10,38 +12,30 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/theme-provider";
 
-// This is sample data.
 const data = {
   user: {
     name: "Rycarddo",
     email: "rycarddo@email.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  calendars: [
-    {
-      name: "Processos",
-      items: ["Personal", "Work", "Family"],
-    },
-    {
-      name: "Modelos",
-      items: ["Holidays", "Birthdays"],
-    },
-    {
-      name: "Tutoriais",
-      items: ["Travel", "Reminders", "Deadlines"],
-    },
-  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname();
+
+  const navItems = [
+    { href: "/", label: "Controle OCNO", icon: FileText },
+    { href: "/modelos", label: "Modelos", icon: FileStack },
+    { href: "/tracker", label: "Tracker", icon: GraduationCap },
+    { href: "/controleOcom", label: "Controle OCOM", icon: FileText },
+  ];
+
   return (
     <Sidebar {...props}>
       <SidebarHeader className="border-sidebar-border h-16 border-b">
@@ -52,20 +46,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarSeparator className="mx-0" />
         <SidebarContent className="flex">
           <SidebarContent className="ml-2">
-            <SidebarMenuButton className="h-10" variant={"currentSection"}>
-              <FileText />
-              <Link href="/">Processos</Link>
-            </SidebarMenuButton>
-            <SidebarMenuButton className="h-10">
-              <FileStack />
-              <Link href="/modelos">Modelos</Link>
-            </SidebarMenuButton>
-            <SidebarMenuButton className="h-10">
-              <GraduationCap />
-              <Link href="/tracker" className="cursor-pointer">
-                Tracker
-              </Link>
-            </SidebarMenuButton>
+            {navItems.map(({ href, label, icon: Icon }) => {
+              const isActive = pathname === href;
+              return (
+                <SidebarMenuButton
+                  key={href}
+                  className="h-10"
+                  variant={isActive ? "currentSection" : "default"}
+                  asChild
+                >
+                  <Link href={href}>
+                    <Icon />
+                    {label}
+                  </Link>
+                </SidebarMenuButton>
+              );
+            })}
           </SidebarContent>
         </SidebarContent>
       </SidebarContent>

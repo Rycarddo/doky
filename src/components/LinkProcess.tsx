@@ -13,57 +13,39 @@ import {
   CommandList,
 } from "./ui/command";
 import React from "react";
+import { useAppContext } from "@/context/app-context";
 
-export const LinkProcess = () => {
-  const processos = [
-    {
-      value: "extrato_de_boletim",
-      label: "Extrato de boletim",
-    },
-    {
-      value: "manutencao_operacional",
-      label: "Manutenção operacional",
-    },
-    {
-      value: "adaptacao_operacional",
-      label: "Adaptação operacional",
-    },
-    {
-      value: "publicacao_em_boletim",
-      label: "Publicação em boletim",
-    },
-    {
-      value: "retificacao_de_dados",
-      label: "Retificação de dados",
-    },
-    {
-      value: "atualizacao_cadastral",
-      label: "Atualização cadastral",
-    },
-    {
-      value: "analise_documental",
-      label: "Análise documental",
-    },
-    {
-      value: "homologacao_de_processo",
-      label: "Homologação de processo",
-    },
-    {
-      value: "arquivamento_administrativo",
-      label: "Arquivamento administrativo",
-    },
-    {
-      value: "encaminhamento_setorial",
-      label: "Encaminhamento setorial",
-    },
-  ];
+type LinkProcessProps = {
+  value?: string;
+  onChange?: (value: string) => void;
+};
 
+export const LinkProcess = ({
+  value: controlledValue,
+  onChange,
+}: LinkProcessProps = {}) => {
+  const { trackers } = useAppContext();
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("");
+  const [localValue, setLocalValue] = React.useState("");
+
+  const isControlled = onChange !== undefined;
+  const value = isControlled ? (controlledValue ?? "") : localValue;
+
+  const handleSelect = (currentValue: string) => {
+    const next = currentValue === value ? "" : currentValue;
+    if (isControlled) {
+      onChange!(next);
+    } else {
+      setLocalValue(next);
+    }
+    setOpen(false);
+  };
+
+  const selectedTracker = trackers.find((t) => t.id === value);
 
   return (
     <div className="flex items-center gap-4 mt-4">
-      <Label>Vincular processo:</Label>
+      <Label>Vincular Tracker:</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -72,33 +54,31 @@ export const LinkProcess = () => {
             aria-expanded={open}
             className="w-fit"
           >
-            {value
-              ? processos.find((processo) => processo.value === value)?.label
-              : "Selecione um processo..."}
+            {selectedTracker ? selectedTracker.subject : "Selecione um tracker..."}
             <ChevronsUpDown className="opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent>
           <Command>
-            <CommandInput placeholder="Selecione o processo..." />
+            <CommandInput placeholder="Buscar tracker..." />
             <CommandList>
-              <CommandEmpty>Processo não encontrado.</CommandEmpty>
-
+              <CommandEmpty>Nenhum tracker encontrado.</CommandEmpty>
               <CommandGroup>
-                {processos.map((processo) => (
+                {value && (
+                  <CommandItem value="" onSelect={() => handleSelect(value)}>
+                    Nenhum
+                    <Check className={value === "" ? "opacity-100" : "opacity-0"} />
+                  </CommandItem>
+                )}
+                {trackers.map((tracker) => (
                   <CommandItem
-                    key={processo.value}
-                    value={processo.value}
-                    onSelect={(currentValue) => {
-                      setValue(currentValue === value ? "" : currentValue);
-                      setOpen(false);
-                    }}
+                    key={tracker.id}
+                    value={tracker.id}
+                    onSelect={handleSelect}
                   >
-                    {processo.label}
+                    {tracker.subject}
                     <Check
-                      className={`opacity-${
-                        value === processo.value ? 100 : 0
-                      }`}
+                      className={value === tracker.id ? "opacity-100" : "opacity-0"}
                     />
                   </CommandItem>
                 ))}

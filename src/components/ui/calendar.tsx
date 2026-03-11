@@ -12,6 +12,7 @@ import {
   type DayButton,
 } from "react-day-picker"
 
+import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 
@@ -39,9 +40,10 @@ function Calendar({
         className
       )}
       captionLayout={captionLayout}
+      locale={ptBR}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+          date.toLocaleString("pt-BR", { month: "long" }),
         ...formatters,
       }}
       classNames={{

@@ -1,7 +1,9 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { DocumentModelDialog } from "@/components/DocumentModelDialog";
 import { RegisterNewModel } from "@/components/RegisterNewModel";
 import { SearchProcess } from "@/components/SearchProcess";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,17 +12,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Expand } from "lucide-react";
+import { useAppContext } from "@/context/app-context";
+import { FileStack } from "lucide-react";
 
-const models = () => {
+const ModelsPage = () => {
+  const { models } = useAppContext();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredModels = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return models;
+    return models.filter((m) => m.subject.toLowerCase().includes(query));
+  }, [models, searchQuery]);
+
   return (
     <>
-      <div className="flex items-center justify-between px-4 w-full">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between py-4 gap-4">
         <SearchProcess
           searchText="Digite o assunto do modelo buscado..."
           width={"full"}
+          value={searchQuery}
+          onChange={setSearchQuery}
         />
-
         <RegisterNewModel />
       </div>
 
@@ -28,25 +42,37 @@ const models = () => {
         <TableHeader>
           <TableRow>
             <TableHead>Assunto</TableHead>
-            {/* Aqui entrará um Dialog */}
-            <TableHead className="w-4">Abrir</TableHead>
+            <TableHead className="w-12">Abrir</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
-          <TableRow>
-            <TableCell>
-              Assunto Assunto Assunto Assunto Assunto Assunto Assunto Assunto
-              Assunto Assunto
-            </TableCell>
-            <TableCell>
-              <DocumentModelDialog />
-            </TableCell>
-          </TableRow>
+          {filteredModels.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={2}>
+                <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
+                  <FileStack className="size-10 opacity-30" />
+                  <p className="text-sm">
+                    {models.length === 0
+                      ? "Nenhum modelo cadastrado. Clique em \"Cadastrar modelo\" para começar."
+                      : "Nenhum modelo encontrado para a busca realizada."}
+                  </p>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+          {filteredModels.map((model) => (
+            <TableRow key={model.id}>
+              <TableCell>{model.subject}</TableCell>
+              <TableCell>
+                <DocumentModelDialog model={model} />
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
     </>
   );
 };
 
-export default models;
+export default ModelsPage;

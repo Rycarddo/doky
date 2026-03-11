@@ -6,11 +6,13 @@ import { Input } from "./ui/input";
 type SearchProcessProps = {
   searchText: string;
   width?: string;
+  value?: string;
+  onChange?: (value: string) => void;
 };
 
 {
-  /* 
-  
+  /*
+
   w-70 default
   w-full para models
 
@@ -20,6 +22,8 @@ type SearchProcessProps = {
 export const SearchProcess = ({
   searchText,
   width = "70",
+  value,
+  onChange,
 }: SearchProcessProps) => {
   return (
     <div className="relative w-full max-w-sm">
@@ -27,6 +31,8 @@ export const SearchProcess = ({
       <Input
         className={`w-${width} my-8 pl-9 rounded-full`}
         placeholder={`${searchText}`}
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
       />
     </div>
   );
