@@ -101,7 +101,8 @@ export default function AdminPage() {
     }
     fetch("/api/admin/users")
       .then((r) => r.json())
-      .then(setUsers);
+      .then((data) => { if (Array.isArray(data)) setUsers(data); })
+      .catch(() => {});
   }, [isPending, session, router]);
 
   const startEdit = (user: ApprovedUser) => {
