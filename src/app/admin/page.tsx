@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Pencil, Trash2, Check, X, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -79,6 +80,8 @@ function CaixasCheckboxes({
 }
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
   const [users, setUsers] = useState<ApprovedUser[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -91,10 +94,15 @@ export default function AdminPage() {
   const [newCaixas, setNewCaixas] = useState<string[]>([]);
 
   useEffect(() => {
+    if (isPending) return;
+    if (session?.user?.role !== "ADMIN") {
+      router.replace("/");
+      return;
+    }
     fetch("/api/admin/users")
       .then((r) => r.json())
       .then(setUsers);
-  }, []);
+  }, [isPending, session, router]);
 
   const startEdit = (user: ApprovedUser) => {
     setEditingId(user.id);
@@ -143,6 +151,8 @@ export default function AdminPage() {
     setNewCaixas([]);
     setAddOpen(false);
   };
+
+  if (isPending || session?.user?.role !== "ADMIN") return null;
 
   return (
     <div className="py-6">
