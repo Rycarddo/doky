@@ -1,9 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
 import { AppProvider } from "@/context/app-context";
+
+// Skip SSR for AppSidebar: it uses authClient.useSession() which makes
+// outbound HTTP calls that fail inside Docker (SSL termination is at the proxy).
+const AppSidebar = dynamic(
+  () => import("@/components/app-sidebar").then((m) => ({ default: m.AppSidebar })),
+  { ssr: false }
+);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

@@ -4,6 +4,10 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
 
 export const auth = betterAuth({
+  // Use internal HTTP URL so better-auth doesn't make outbound HTTPS calls
+  // to itself from inside Docker (SSL is terminated at the proxy, not in-container).
+  // Set BETTER_AUTH_INTERNAL_URL=http://localhost:3000 in Coolify to override.
+  baseURL: process.env.BETTER_AUTH_INTERNAL_URL ?? process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -11,6 +15,11 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      // Explicitly set redirect URI to the public HTTPS URL so Google OAuth
+      // works correctly even when baseURL points to the internal HTTP URL.
+      redirectURI: process.env.BETTER_AUTH_URL
+        ? `${process.env.BETTER_AUTH_URL}/api/auth/callback/google`
+        : undefined,
     },
   },
   user: {
