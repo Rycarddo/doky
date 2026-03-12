@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const { GET: _GET, POST: _POST } = toNextJsHandler(auth);
 
-export async function GET(req: NextRequest, ctx: unknown) {
-  const res = await _GET(req, ctx);
+export async function GET(req: NextRequest) {
+  const res = await _GET(req);
 
   // When the OAuth callback returns an error (e.g. unauthorized email),
   // redirect to the login page instead of showing raw JSON.
