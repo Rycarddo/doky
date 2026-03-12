@@ -11,7 +11,7 @@ import type {
 } from "@/lib/types";
 
 type DocumentUpdates = Partial<
-  Pick<AppDocument, "sigad" | "priority" | "subject" | "deadline" | "linkedProcess">
+  Pick<AppDocument, "sigad" | "priority" | "subject" | "deadline" | "linkedProcess" | "trackerId">
 >;
 
 type OcomUpdates = Partial<
@@ -40,6 +40,7 @@ type AppContextType = {
     trackerId?: string;
   }) => Promise<void>;
   updateDocument: (id: string, updates: DocumentUpdates) => Promise<void>;
+  deleteDocument: (id: string) => Promise<void>;
   finalizeDocument: (id: string) => Promise<void>;
   reactivateDocument: (id: string) => Promise<void>;
   addHistoryEntry: (docId: string, sigad: string, text: string) => Promise<void>;
@@ -56,7 +57,7 @@ type AppContextType = {
   // Models
   models: Model[];
   addModel: (subject: string, content: string) => Promise<void>;
-  updateModel: (id: string, content: string) => Promise<void>;
+  updateModel: (id: string, content: string, subject?: string) => Promise<void>;
   deleteModel: (id: string) => Promise<void>;
   // OCOM
   ocomProcesses: OcomProcess[];
@@ -112,6 +113,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
     const updated: AppDocument = await res.json();
     setDocuments((prev) => prev.map((d) => (d.id === id ? updated : d)));
+  };
+
+  const deleteDocument = async (id: string) => {
+    await fetch(`/api/processes/${id}`, { method: "DELETE" });
+    setDocuments((prev) => prev.filter((d) => d.id !== id));
   };
 
   const finalizeDocument = async (id: string) => {
@@ -253,11 +259,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setModels((prev) => [created, ...prev]);
   };
 
-  const updateModel = async (id: string, content: string) => {
+  const updateModel = async (id: string, content: string, subject?: string) => {
     const res = await fetch(`/api/models/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, ...(subject !== undefined && { subject }) }),
     });
     const updated: Model = await res.json();
     setModels((prev) => prev.map((m) => (m.id === id ? updated : m)));
@@ -338,6 +344,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         documents,
         addDocument,
         updateDocument,
+        deleteDocument,
         finalizeDocument,
         reactivateDocument,
         addHistoryEntry,

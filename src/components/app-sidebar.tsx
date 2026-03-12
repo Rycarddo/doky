@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, FileStack, GraduationCap } from "lucide-react";
+import { FileText, FileStack, GraduationCap, Shield } from "lucide-react";
 
 import { DatePicker } from "@/components/date-picker";
 import { NavUser } from "@/components/nav-user";
@@ -17,29 +17,25 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/theme-provider";
-
-const data = {
-  user: {
-    name: "Rycarddo",
-    email: "rycarddo@email.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-};
+import { authClient } from "@/lib/auth-client";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
 
   const navItems = [
     { href: "/", label: "Controle OCNO", icon: FileText },
     { href: "/modelos", label: "Modelos", icon: FileStack },
     { href: "/tracker", label: "Tracker", icon: GraduationCap },
     { href: "/controleOcom", label: "Controle OCOM", icon: FileText },
+    ...(isAdmin ? [{ href: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
   return (
     <Sidebar {...props}>
       <SidebarHeader className="border-sidebar-border h-16 border-b">
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarHeader>
       <SidebarContent>
         <DatePicker />

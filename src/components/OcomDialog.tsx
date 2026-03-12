@@ -162,14 +162,14 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
             <Separator />
 
             <div className="w-full [&>div]:overflow-x-hidden">
-            <Table style={{ tableLayout: "fixed", width: "100%" }}>
+            <Table className="[&_th]:px-3 [&_td]:px-3 [&_th]:text-center [&_td]:text-center" style={{ tableLayout: "fixed", width: "100%" }}>
                 <TableHeader>
                   <TableRow>
-                    <TableHead style={{ width: "9rem" }}>Data</TableHead>
-                    <TableHead style={{ width: "6rem" }}>Usuário</TableHead>
+                    <TableHead style={{ width: "10rem" }}>Data</TableHead>
+                    <TableHead style={{ width: "7rem" }}>Usuário</TableHead>
                     <TableHead>Texto</TableHead>
-                    <TableHead style={{ width: "2.5rem" }}>Editar</TableHead>
-                    <TableHead style={{ width: "2.5rem" }}>Deletar</TableHead>
+                    <TableHead style={{ width: "4rem" }}>Editar</TableHead>
+                    <TableHead style={{ width: "4rem" }}>Deletar</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

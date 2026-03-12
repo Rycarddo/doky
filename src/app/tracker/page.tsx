@@ -39,19 +39,20 @@ const TrackerPage = () => {
         <RegisterNewTracker />
       </div>
 
-      <Table>
+      <Table style={{ tableLayout: "fixed", width: "100%" }}>
         <TableHeader>
           <TableRow>
             <TableHead>Assunto</TableHead>
-            <TableHead className="w-12">Editar</TableHead>
-            <TableHead className="w-12">Abrir</TableHead>
+            <TableHead style={{ width: "10rem" }}>Última atualização</TableHead>
+            <TableHead style={{ width: "4rem" }} className="text-center">Editar</TableHead>
+            <TableHead style={{ width: "4rem" }} className="text-center">Abrir</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
           {filteredTrackers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={3}>
+              <TableCell colSpan={4}>
                 <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
                   <GraduationCap className="size-10 opacity-30" />
                   <p className="text-sm">
@@ -66,10 +67,11 @@ const TrackerPage = () => {
           {filteredTrackers.map((tracker) => (
             <TableRow key={tracker.id}>
               <TableCell>{tracker.subject}</TableCell>
-              <TableCell>
+              <TableCell className="text-sm text-muted-foreground">{tracker.updatedAt}</TableCell>
+              <TableCell className="text-center">
                 <EditTracker tracker={tracker} />
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 <TrackerDialog tracker={tracker} />
               </TableCell>
             </TableRow>

@@ -6,11 +6,14 @@ type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const { content } = await req.json();
+  const { content, subject } = await req.json();
 
   const model = await prisma.documentTemplate.update({
     where: { id },
-    data: { text: content },
+    data: {
+      ...(content !== undefined && { text: content }),
+      ...(subject !== undefined && { name: subject }),
+    },
   });
 
   return NextResponse.json(mapModelFromDB(model));

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const entry = await prisma.ocomHistory.create({
     data: { text, ocomProcessId: id, creatorId: user.id },
-    include: { creator: { select: { username: true } } },
+    include: { creator: { select: { name: true } } },
   });
 
   return NextResponse.json(
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       id: entry.id,
       text: entry.text,
       date: entry.createdAt.toLocaleString("pt-BR"),
-      user: entry.creator.username,
+      user: entry.creator.name,
     },
     { status: 201 }
   );

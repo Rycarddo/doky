@@ -38,18 +38,19 @@ const ModelsPage = () => {
         <RegisterNewModel />
       </div>
 
-      <Table>
+      <Table style={{ tableLayout: "fixed", width: "100%" }}>
         <TableHeader>
           <TableRow>
             <TableHead>Assunto</TableHead>
-            <TableHead className="w-12">Abrir</TableHead>
+            <TableHead style={{ width: "10rem" }}>Última atualização</TableHead>
+            <TableHead style={{ width: "4rem" }} className="text-center">Abrir</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
           {filteredModels.length === 0 && (
             <TableRow>
-              <TableCell colSpan={2}>
+              <TableCell colSpan={3}>
                 <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
                   <FileStack className="size-10 opacity-30" />
                   <p className="text-sm">
@@ -64,7 +65,8 @@ const ModelsPage = () => {
           {filteredModels.map((model) => (
             <TableRow key={model.id}>
               <TableCell>{model.subject}</TableCell>
-              <TableCell>
+              <TableCell className="text-sm text-muted-foreground">{model.updatedAt}</TableCell>
+              <TableCell className="text-center">
                 <DocumentModelDialog model={model} />
               </TableCell>
             </TableRow>

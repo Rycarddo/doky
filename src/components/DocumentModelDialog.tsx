@@ -4,7 +4,9 @@ import { useState } from "react";
 import { Expand, ClipboardCopy, Edit, Trash2, Check, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
+import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
 import { useAppContext } from "@/context/app-context";
 import type { Model } from "@/lib/types";
@@ -18,18 +20,20 @@ export const DocumentModelDialog = ({ model }: DocumentModelDialogProps) => {
   const [open, setOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(model.content);
+  const [subject, setSubject] = useState(model.subject);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content);
   };
 
   const handleSave = () => {
-    updateModel(model.id, content);
+    updateModel(model.id, content, subject !== model.subject ? subject : undefined);
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
     setContent(model.content);
+    setSubject(model.subject);
     setIsEditing(false);
   };
 
@@ -38,13 +42,34 @@ export const DocumentModelDialog = ({ model }: DocumentModelDialogProps) => {
     setOpen(false);
   };
 
+  // Sync state when dialog opens
+  const handleOpenChange = (next: boolean) => {
+    if (next) {
+      setContent(model.content);
+      setSubject(model.subject);
+      setIsEditing(false);
+    }
+    setOpen(next);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Expand className="cursor-pointer" />
       </DialogTrigger>
       <DialogContent style={{ width: "50vw" }}>
-        <DialogTitle>{model.subject}</DialogTitle>
+        <DialogTitle>
+          {isEditing ? (
+            <Input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="text-base font-semibold"
+              placeholder="Nome do modelo"
+            />
+          ) : (
+            model.subject
+          )}
+        </DialogTitle>
         <Separator />
 
         <div className="flex flex-col gap-4">
@@ -68,6 +93,7 @@ export const DocumentModelDialog = ({ model }: DocumentModelDialogProps) => {
                     size="sm"
                     className="gap-1.5 bg-green-700 hover:bg-green-600"
                     onClick={handleSave}
+                    disabled={!subject.trim()}
                   >
                     <Check className="size-3.5" />
                     Salvar
@@ -106,6 +132,12 @@ export const DocumentModelDialog = ({ model }: DocumentModelDialogProps) => {
               )}
             </div>
           </div>
+
+          {isEditing && (
+            <Label className="w-full -mb-2">
+              Conteúdo
+            </Label>
+          )}
 
           <Textarea
             className={`w-full min-h-80 resize-y transition-colors ${

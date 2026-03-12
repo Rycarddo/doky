@@ -29,6 +29,8 @@ export type AppDocument = {
   history: HistoryEntry[];
   trackerTasks: TrackerTask[];
   linkedProcess: string;
+  trackerId?: string;
+  trackerModelId?: string;
 };
 
 export type Tracker = {
@@ -36,12 +38,14 @@ export type Tracker = {
   subject: string;
   tasks: TrackerTask[];
   modelId?: string;
+  updatedAt: string;
 };
 
 export type Model = {
   id: string;
   subject: string;
   content: string;
+  updatedAt: string;
 };
 
 export type OcomCategoria = "EPTA A" | "EPTA ESPECIAL" | "ETEX" | "EQI" | "OUTROS";

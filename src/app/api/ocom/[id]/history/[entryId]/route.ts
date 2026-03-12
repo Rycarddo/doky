@@ -13,14 +13,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const entry = await prisma.ocomHistory.update({
     where: { id: entryId },
     data: { text, creatorId: user.id },
-    include: { creator: { select: { username: true } } },
+    include: { creator: { select: { name: true } } },
   });
 
   return NextResponse.json({
     id: entry.id,
     text: entry.text,
     date: (entry.updatedAt ?? entry.createdAt).toLocaleString("pt-BR"),
-    user: entry.creator.username,
+    user: entry.creator.name,
   });
 }
 

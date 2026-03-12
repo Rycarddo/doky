@@ -1,4 +1,6 @@
+import { headers } from "next/headers";
 import { prisma } from "./prisma";
+import { auth } from "./auth";
 import type { AppDocument, Tracker, Model, HistoryEntry, TrackerTask, OcomProcess, OcomHistoryEntry, OcomSituacao } from "./types";
 
 // Parses "DD/MM/YYYY" format (pt-BR) to Date, returns null for empty strings
@@ -9,16 +11,10 @@ export function parsePtBRDate(value: string | null | undefined): Date | null {
   return new Date(year, month - 1, day);
 }
 
-// The hardcoded user for this single-user app
-const CURRENT_USER_USERNAME = "rycarddo";
-const CURRENT_USER_EMAIL = "rycarddo@doky.local";
-
 export async function getCurrentUser() {
-  return prisma.user.upsert({
-    where: { email: CURRENT_USER_EMAIL },
-    update: {},
-    create: { username: CURRENT_USER_USERNAME, email: CURRENT_USER_EMAIL },
-  });
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Não autorizado");
+  return prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
 }
 
 // --- Mappers ---
@@ -33,13 +29,16 @@ type ProcessFromDB = {
   updatedAt: Date;
   deadline: Date | null;
   linkedProcess: string | null;
-  creator: { username: string };
+  trackerId: string | null;
+  creator: { name: string };
+  tracker: { documentTemplateId: string | null } | null;
   history: {
     id: string;
     text: string;
     sigad: string | null;
     createdAt: Date;
-    creator: { username: string };
+    updatedAt: Date | null;
+    creator: { name: string };
   }[];
   tasks: {
     id: string;
@@ -58,18 +57,20 @@ export function mapProcessToAppDocument(p: ProcessFromDB): AppDocument {
     priority: p.priority === "HIGH" ? "Alta" : "Normal",
     subject: p.subject,
     beginning: p.createdAt.toLocaleDateString("pt-BR"),
-    user: p.creator.username,
+    user: p.creator.name,
     status: p.status === "DONE" ? "Finalizado" : "Em andamento",
     lastUpdate: p.updatedAt.toLocaleDateString("pt-BR"),
     deadline: p.deadline ? p.deadline.toLocaleDateString("pt-BR") : "",
     linkedProcess: p.linkedProcess ?? "",
+    trackerId: p.trackerId ?? undefined,
+    trackerModelId: p.tracker?.documentTemplateId ?? undefined,
     history: p.history.map(
       (h): HistoryEntry => ({
         id: h.id,
         text: h.text,
         sigad: h.sigad ?? p.sigad,
-        date: h.createdAt.toLocaleString("pt-BR"),
-        user: h.creator.username,
+        date: (h.updatedAt ?? h.createdAt).toLocaleString("pt-BR"),
+        user: h.creator.name,
       })
     ),
     trackerTasks: p.tasks.map(
@@ -87,6 +88,7 @@ type TrackerFromDB = {
   id: string;
   name: string;
   documentTemplateId: string | null;
+  createdAt: Date;
   tasks: {
     id: string;
     title: string;
@@ -100,6 +102,7 @@ export function mapTrackerFromDB(t: TrackerFromDB): Tracker {
     id: t.id,
     subject: t.name,
     modelId: t.documentTemplateId ?? undefined,
+    updatedAt: t.createdAt.toLocaleDateString("pt-BR"),
     tasks: t.tasks
       .sort((a, b) => a.order - b.order)
       .map((task): TrackerTask => ({
@@ -115,6 +118,7 @@ type ModelFromDB = {
   id: string;
   name: string;
   text: string;
+  updatedAt: Date;
 };
 
 export function mapModelFromDB(m: ModelFromDB): Model {
@@ -122,14 +126,16 @@ export function mapModelFromDB(m: ModelFromDB): Model {
     id: m.id,
     subject: m.name,
     content: m.text,
+    updatedAt: m.updatedAt.toLocaleDateString("pt-BR"),
   };
 }
 
 // Shared include for Process queries
 export const processInclude = {
-  creator: { select: { username: true } },
+  creator: { select: { name: true } },
+  tracker: { select: { documentTemplateId: true } },
   history: {
-    include: { creator: { select: { username: true } } },
+    include: { creator: { select: { name: true } } },
     orderBy: { createdAt: "asc" as const },
   },
   tasks: {
@@ -161,7 +167,7 @@ type OcomFromDB = {
     id: string;
     text: string;
     createdAt: Date;
-    creator: { username: string };
+    creator: { name: string };
   }[];
 };
 
@@ -181,7 +187,7 @@ export function mapOcomFromDB(o: OcomFromDB): OcomProcess {
         id: h.id,
         text: h.text,
         date: h.createdAt.toLocaleString("pt-BR"),
-        user: h.creator.username,
+        user: h.creator.name,
       })
     ),
   };
@@ -189,7 +195,7 @@ export function mapOcomFromDB(o: OcomFromDB): OcomProcess {
 
 export const ocomInclude = {
   history: {
-    include: { creator: { select: { username: true } } },
+    include: { creator: { select: { name: true } } },
     orderBy: { createdAt: "asc" as const },
   },
 };

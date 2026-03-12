@@ -17,6 +17,17 @@ enum ProcessStatus {
   DONE
 }
 
+enum UserRole {
+  ADMIN
+  OPERATOR
+}
+
+enum CaixaType {
+  OCOM
+  OCNO
+  CIVA_AZ
+}
+
 model Process {
   id            String          @id @default(uuid())
   sigad         String          @unique
@@ -40,13 +51,58 @@ model Process {
 }
 
 model User {
-  id       String @id @default(uuid())
-  username String
-  email    String @unique
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  role          UserRole @default(OPERATOR)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   processes   Process[]
   history     ProcessHistory[]
   ocomHistory OcomHistory[]
+  sessions    Session[]
+  accounts    Account[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
 }
 
 model ProcessHistory {
@@ -60,7 +116,8 @@ model ProcessHistory {
   creatorId String
   creator   User   @relation(fields: [creatorId], references: [id])
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 model Tracker {
@@ -135,6 +192,24 @@ model OcomHistory {
 
   createdAt DateTime @default(now())
   updatedAt DateTime? @updatedAt
+}
+
+model ApprovedUser {
+  id        String      @id @default(uuid())
+  email     String      @unique
+  name      String
+  role      UserRole    @default(OPERATOR)
+  caixas    UserCaixa[]
+  createdAt DateTime    @default(now())
+}
+
+model UserCaixa {
+  id             String       @id @default(uuid())
+  approvedUserId String
+  approvedUser   ApprovedUser @relation(fields: [approvedUserId], references: [id], onDelete: Cascade)
+  caixa          CaixaType
+
+  @@unique([approvedUserId, caixa])
 }
 
 model DocumentTemplate {

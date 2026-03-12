@@ -17,7 +17,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       processId: id,
       creatorId: user.id,
     },
-    include: { creator: { select: { username: true } } },
+    include: { creator: { select: { name: true } } },
   });
 
   return NextResponse.json(
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       text: entry.text,
       sigad: entry.sigad ?? sigad,
       date: entry.createdAt.toLocaleString("pt-BR"),
-      user: entry.creator.username,
+      user: entry.creator.name,
     },
     { status: 201 }
   );
