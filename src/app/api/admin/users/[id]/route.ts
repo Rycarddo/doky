@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/db-helpers";
-import type { CaixaType } from "../../../../../generated/prisma/client";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -37,7 +36,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     await prisma.userCaixa.deleteMany({ where: { approvedUserId: id } });
     if (caixas.length > 0) {
       await prisma.userCaixa.createMany({
-        data: caixas.map((c: string) => ({ approvedUserId: id, caixa: c as CaixaType })),
+        data: caixas.map((c: string) => ({ approvedUserId: id, caixa: c as "OCOM" | "OCNO" | "CIVA_AZ" })),
       });
     }
   }
