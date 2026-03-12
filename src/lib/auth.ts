@@ -8,6 +8,9 @@ export const auth = betterAuth({
   // to itself from inside Docker (SSL is terminated at the proxy, not in-container).
   // Set BETTER_AUTH_INTERNAL_URL=http://localhost:3000 in Coolify to override.
   baseURL: process.env.BETTER_AUTH_INTERNAL_URL ?? process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  // Trust the public HTTPS origin so browser requests aren't rejected when
+  // baseURL points to the internal HTTP URL.
+  trustedOrigins: process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : [],
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
