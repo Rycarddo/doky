@@ -21,7 +21,8 @@ export async function proxy(req: NextRequest) {
 
   // Protect /admin: check role via session API
   if (sessionCookie && isAdminPage) {
-    const sessionRes = await fetch(new URL("/api/auth/get-session", req.url), {
+    const internalBase = process.env.BETTER_AUTH_INTERNAL_URL ?? "http://localhost:3000";
+    const sessionRes = await fetch(new URL("/api/auth/get-session", internalBase), {
       headers: { cookie: req.headers.get("cookie") ?? "" },
     });
     const session = await sessionRes.json();
