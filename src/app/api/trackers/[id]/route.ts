@@ -46,5 +46,41 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     include: trackerInclude,
   });
 
+  // Rebuild linked process task rows when tasks change
+  if (taskIdsToDelete?.length || tasksToAdd?.length) {
+    const currentTasks = await prisma.trackerTask.findMany({
+      where: { trackerId: id },
+      orderBy: { order: "asc" },
+    });
+
+    const linkedProcesses = await prisma.process.findMany({
+      where: { trackerId: id },
+      select: { id: true },
+    });
+    for (const process of linkedProcesses) {
+      await prisma.processTask.deleteMany({ where: { processId: process.id } });
+      if (currentTasks.length) {
+        await prisma.processTask.createMany({
+          data: currentTasks.map((t) => ({ processId: process.id, trackerTaskId: t.id })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    const linkedOcoms = await prisma.ocomProcess.findMany({
+      where: { trackerId: id },
+      select: { id: true },
+    });
+    for (const ocom of linkedOcoms) {
+      await prisma.ocomProcessTask.deleteMany({ where: { ocomProcessId: ocom.id } });
+      if (currentTasks.length) {
+        await prisma.ocomProcessTask.createMany({
+          data: currentTasks.map((t) => ({ ocomProcessId: ocom.id, trackerTaskId: t.id })),
+          skipDuplicates: true,
+        });
+      }
+    }
+  }
+
   return NextResponse.json(mapTrackerFromDB(tracker));
 }

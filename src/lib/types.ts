@@ -39,6 +39,7 @@ export type Tracker = {
   tasks: TrackerTask[];
   modelId?: string;
   updatedAt: string;
+  caixa: string;
 };
 
 export type Model = {
@@ -46,6 +47,7 @@ export type Model = {
   subject: string;
   content: string;
   updatedAt: string;
+  caixa: string;
 };
 
 export type OcomCategoria = "EPTA A" | "EPTA ESPECIAL" | "ETEX" | "EQI" | "OUTROS";
@@ -69,4 +71,8 @@ export type OcomProcess = {
   prazo: string; // DD/MM/YYYY or ""
   anoInicio: number;
   history: OcomHistoryEntry[];
+  trackerId?: string;
+  trackerModelId?: string;
+  trackerTasks: TrackerTask[];
+  observacoes?: string;
 };

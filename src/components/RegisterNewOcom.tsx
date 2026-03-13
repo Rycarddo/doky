@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { useAppContext } from "@/context/app-context";
+import { LinkProcess } from "./LinkProcess";
 import type { OcomSituacao } from "@/lib/types";
 
 const CATEGORIAS = ["EPTA A", "EPTA ESPECIAL", "ETEX", "EQI", "OUTROS"] as const;
@@ -38,6 +39,7 @@ export const RegisterNewOcom = () => {
   const [situacao, setSituacao] = useState<OcomSituacao>("EM ANDAMENTO");
   const [prazo, setPrazo] = useState("");
   const [anoInicio, setAnoInicio] = useState(new Date().getFullYear().toString());
+  const [trackerId, setTrackerId] = useState("");
 
   const handleSubmit = () => {
     if (!processo.trim() || !categoria || !desigTelegrafica.trim() || !localidade.trim()) return;
@@ -48,8 +50,9 @@ export const RegisterNewOcom = () => {
       localidade: localidade.trim(),
       empresa: empresa.trim(),
       situacao,
-      prazo, // YYYY-MM-DD from input[type=date], API converts
+      prazo,
       anoInicio: Number(anoInicio),
+      trackerId: trackerId || undefined,
     });
     setProcesso("");
     setCategoria("");
@@ -59,6 +62,7 @@ export const RegisterNewOcom = () => {
     setSituacao("EM ANDAMENTO");
     setPrazo("");
     setAnoInicio(new Date().getFullYear().toString());
+    setTrackerId("");
     setOpen(false);
   };
 
@@ -170,6 +174,8 @@ export const RegisterNewOcom = () => {
               />
             </Label>
           </div>
+
+          <LinkProcess value={trackerId} onChange={setTrackerId} caixa="OCOM" />
 
           <div className="flex justify-end mt-2">
             <Button

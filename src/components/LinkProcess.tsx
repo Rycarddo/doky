@@ -18,13 +18,16 @@ import { useAppContext } from "@/context/app-context";
 type LinkProcessProps = {
   value?: string;
   onChange?: (value: string) => void;
+  caixa?: string;
 };
 
 export const LinkProcess = ({
   value: controlledValue,
   onChange,
+  caixa,
 }: LinkProcessProps = {}) => {
-  const { trackers } = useAppContext();
+  const { trackers: allTrackers } = useAppContext();
+  const trackers = caixa ? allTrackers.filter((t) => t.caixa === caixa) : allTrackers;
   const [open, setOpen] = React.useState(false);
   const [localValue, setLocalValue] = React.useState("");
 

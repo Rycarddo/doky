@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const data: Record<string, unknown> = {};
 
-  const stringFields = ["processo", "categoria", "desigTelegrafica", "localidade", "situacao"] as const;
+  const stringFields = ["processo", "categoria", "desigTelegrafica", "localidade", "situacao", "observacoes"] as const;
   for (const field of stringFields) {
     if (body[field] !== undefined) data[field] = body[field];
   }
@@ -25,6 +25,22 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (body.empresa !== undefined) data.empresa = body.empresa || null;
   if (body.anoInicio !== undefined) data.anoInicio = Number(body.anoInicio);
   if (body.prazo !== undefined) data.prazo = body.prazo ? parsePrazo(body.prazo) : null;
+  if (body.trackerId !== undefined) data.trackerId = body.trackerId || null;
+
+  // If trackerId is being changed, rebuild OcomProcessTasks
+  if (body.trackerId !== undefined) {
+    await prisma.ocomProcessTask.deleteMany({ where: { ocomProcessId: id } });
+    if (body.trackerId) {
+      const trackerTasks = await prisma.trackerTask.findMany({
+        where: { trackerId: body.trackerId },
+        orderBy: { order: "asc" },
+      });
+      await prisma.ocomProcessTask.createMany({
+        data: trackerTasks.map((t) => ({ ocomProcessId: id, trackerTaskId: t.id })),
+        skipDuplicates: true,
+      });
+    }
+  }
 
   const record = await prisma.ocomProcess.update({
     where: { id },

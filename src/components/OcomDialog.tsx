@@ -29,7 +29,9 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
+import { CheckboxTracker } from "./CheckboxTracker";
 import { useAppContext } from "@/context/app-context";
+import { LinkProcess } from "./LinkProcess";
 import type { OcomProcess, OcomHistoryEntry, OcomSituacao } from "@/lib/types";
 
 const CATEGORIAS = ["EPTA A", "EPTA ESPECIAL", "ETEX", "EQI", "OUTROS"] as const;
@@ -53,6 +55,8 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
     deleteOcomHistoryEntry,
     updateOcomProcess,
     deleteOcomProcess,
+    toggleOcomTrackerTask,
+    models,
   } = useAppContext();
 
   const [open, setOpen] = useState(false);
@@ -60,6 +64,11 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
   const [histText, setHistText] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
+
+  // Tracker state
+  const [trackerId, setTrackerId] = useState(ocom.trackerId ?? "");
+  const [savedTrackerId, setSavedTrackerId] = useState(ocom.trackerId ?? "");
+  const [trackerTasks, setTrackerTasks] = useState(ocom.trackerTasks);
 
   // Config. Iniciais state — synced when dialog opens via key
   const [processo, setProcesso] = useState(ocom.processo);
@@ -74,6 +83,9 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
   const handleOpenChange = (next: boolean) => {
     if (next) {
       // Sync form state with latest ocom data
+      setTrackerId(ocom.trackerId ?? "");
+      setSavedTrackerId(ocom.trackerId ?? "");
+      setTrackerTasks(ocom.trackerTasks);
       setProcesso(ocom.processo);
       setCategoria(ocom.categoria);
       setDesigTelegrafica(ocom.desigTelegrafica);
@@ -110,6 +122,13 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
     setEditText("");
   };
 
+  const handleChangeTracker = async (newTrackerId: string) => {
+    setTrackerId(newTrackerId);
+    const updated = await updateOcomProcess(ocom.id, { trackerId: newTrackerId });
+    setSavedTrackerId(newTrackerId);
+    setTrackerTasks(updated.trackerTasks);
+  };
+
   const handleSaveConfig = () => {
     updateOcomProcess(ocom.id, {
       processo: processo.trim(),
@@ -139,6 +158,7 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
         <Tabs defaultValue="historico">
           <TabsList>
             <TabsTrigger value="historico">Histórico</TabsTrigger>
+            <TabsTrigger value="tracker">Tracker</TabsTrigger>
             <TabsTrigger value="config">Config. Iniciais</TabsTrigger>
           </TabsList>
 
@@ -239,6 +259,46 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
                 </TableBody>
               </Table>
             </div>
+          </TabsContent>
+
+          {/* Tracker tab */}
+          <TabsContent value="tracker" className="flex flex-col gap-4 py-2">
+            <LinkProcess value={trackerId} onChange={handleChangeTracker} caixa="OCOM" />
+
+            <Separator />
+
+            {/* Tracker tasks */}
+            {trackerTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {savedTrackerId
+                  ? "Nenhuma tarefa cadastrada neste tracker."
+                  : "Nenhum tracker vinculado."}
+              </p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {trackerTasks.map((task) => {
+                  const model = task.modelId ? models.find((m) => m.id === task.modelId) : null;
+                  return (
+                    <div key={task.id} className="flex flex-col gap-1">
+                      <CheckboxTracker
+                        id={task.id}
+                        text={task.text}
+                        checked={task.done}
+                        onCheckedChange={async () => {
+                          await toggleOcomTrackerTask(ocom.id, task.id);
+                          setTrackerTasks((prev) =>
+                            prev.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t))
+                          );
+                        }}
+                      />
+                      {model && (
+                        <span className="ml-4 text-xs text-muted-foreground">{model.subject}</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           {/* Config. Iniciais tab */}

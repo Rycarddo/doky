@@ -168,7 +168,7 @@ export const EditProcess = ({ document }: EditProcessProps) => {
       deadline: deadline
         ? deadline.toLocaleDateString("pt-BR")
         : document.deadline,
-      trackerId: trackerId || undefined,
+      trackerId,
     });
   };
 

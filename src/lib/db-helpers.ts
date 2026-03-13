@@ -87,6 +87,7 @@ export function mapProcessToAppDocument(p: ProcessFromDB): AppDocument {
 type TrackerFromDB = {
   id: string;
   name: string;
+  caixa: string;
   documentTemplateId: string | null;
   createdAt: Date;
   tasks: {
@@ -101,6 +102,7 @@ export function mapTrackerFromDB(t: TrackerFromDB): Tracker {
   return {
     id: t.id,
     subject: t.name,
+    caixa: t.caixa,
     modelId: t.documentTemplateId ?? undefined,
     updatedAt: t.createdAt.toLocaleDateString("pt-BR"),
     tasks: t.tasks
@@ -118,6 +120,7 @@ type ModelFromDB = {
   id: string;
   name: string;
   text: string;
+  caixa: string;
   updatedAt: Date;
 };
 
@@ -126,6 +129,7 @@ export function mapModelFromDB(m: ModelFromDB): Model {
     id: m.id,
     subject: m.name,
     content: m.text,
+    caixa: m.caixa,
     updatedAt: m.updatedAt.toLocaleDateString("pt-BR"),
   };
 }
@@ -163,11 +167,22 @@ type OcomFromDB = {
   situacao: string;
   prazo: Date | null;
   anoInicio: number;
+  observacoes?: string | null;
+  trackerId: string | null;
+  tracker: { documentTemplateId: string | null } | null;
   history: {
     id: string;
     text: string;
     createdAt: Date;
     creator: { name: string };
+  }[];
+  tasks: {
+    id: string;
+    done: boolean;
+    trackerTask: {
+      title: string;
+      documentTemplateId: string | null;
+    };
   }[];
 };
 
@@ -182,12 +197,23 @@ export function mapOcomFromDB(o: OcomFromDB): OcomProcess {
     situacao: o.situacao as OcomSituacao,
     prazo: o.prazo ? o.prazo.toLocaleDateString("pt-BR") : "",
     anoInicio: o.anoInicio,
+    observacoes: o.observacoes ?? undefined,
+    trackerId: o.trackerId ?? undefined,
+    trackerModelId: o.tracker?.documentTemplateId ?? undefined,
     history: o.history.map(
       (h): OcomHistoryEntry => ({
         id: h.id,
         text: h.text,
         date: h.createdAt.toLocaleString("pt-BR"),
         user: h.creator.name,
+      })
+    ),
+    trackerTasks: o.tasks.map(
+      (t): TrackerTask => ({
+        id: t.id,
+        text: t.trackerTask.title,
+        done: t.done,
+        modelId: t.trackerTask.documentTemplateId ?? undefined,
       })
     ),
   };
@@ -197,5 +223,11 @@ export const ocomInclude = {
   history: {
     include: { creator: { select: { name: true } } },
     orderBy: { createdAt: "asc" as const },
+  },
+  tracker: { select: { documentTemplateId: true } },
+  tasks: {
+    include: {
+      trackerTask: { select: { title: true, documentTemplateId: true } },
+    },
   },
 };

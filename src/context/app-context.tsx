@@ -25,6 +25,8 @@ type OcomUpdates = Partial<
     | "situacao"
     | "prazo"
     | "anoInicio"
+    | "trackerId"
+    | "observacoes"
   >
 >;
 
@@ -49,24 +51,25 @@ type AppContextType = {
   toggleDocTrackerTask: (docId: string, taskId: string) => Promise<void>;
   // Trackers
   trackers: Tracker[];
-  addTracker: (subject: string, tasks: { text: string; modelId?: string }[], modelId?: string) => Promise<void>;
+  addTracker: (subject: string, tasks: { text: string; modelId?: string }[], modelId?: string, caixa?: string) => Promise<void>;
   updateTrackerModel: (trackerId: string, modelId: string | undefined) => Promise<void>;
   updateTrackerTaskModel: (trackerId: string, taskId: string, modelId: string | undefined) => Promise<void>;
   toggleTrackerTask: (trackerId: string, taskId: string) => Promise<void>;
   editTracker: (trackerId: string, subject: string, tasksToAdd: { text: string; modelId?: string }[], taskIdsToDelete: string[]) => Promise<void>;
   // Models
   models: Model[];
-  addModel: (subject: string, content: string) => Promise<void>;
+  addModel: (subject: string, content: string, caixa?: string) => Promise<void>;
   updateModel: (id: string, content: string, subject?: string) => Promise<void>;
   deleteModel: (id: string) => Promise<void>;
   // OCOM
   ocomProcesses: OcomProcess[];
-  addOcomProcess: (data: Omit<OcomProcess, "id" | "history">) => Promise<void>;
-  updateOcomProcess: (id: string, updates: OcomUpdates) => Promise<void>;
+  addOcomProcess: (data: Omit<OcomProcess, "id" | "history" | "trackerTasks" | "trackerModelId"> & { trackerId?: string }) => Promise<void>;
+  updateOcomProcess: (id: string, updates: OcomUpdates) => Promise<OcomProcess>;
   deleteOcomProcess: (id: string) => Promise<void>;
   addOcomHistoryEntry: (ocomId: string, text: string) => Promise<void>;
   updateOcomHistoryEntry: (ocomId: string, entryId: string, text: string) => Promise<void>;
   deleteOcomHistoryEntry: (ocomId: string, entryId: string) => Promise<void>;
+  toggleOcomTrackerTask: (ocomId: string, taskId: string) => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -191,11 +194,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // --- Trackers ---
 
-  const addTracker = async (subject: string, tasks: { text: string; modelId?: string }[], modelId?: string) => {
+  const addTracker = async (subject: string, tasks: { text: string; modelId?: string }[], modelId?: string, caixa?: string) => {
     const res = await fetch("/api/trackers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject, tasks, modelId }),
+      body: JSON.stringify({ subject, tasks, modelId, caixa }),
     });
     const created: Tracker = await res.json();
     setTrackers((prev) => [created, ...prev]);
@@ -249,11 +252,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // --- Models ---
 
-  const addModel = async (subject: string, content: string) => {
+  const addModel = async (subject: string, content: string, caixa?: string) => {
     const res = await fetch("/api/models", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject, content }),
+      body: JSON.stringify({ subject, content, caixa }),
     });
     const created: Model = await res.json();
     setModels((prev) => [created, ...prev]);
@@ -276,7 +279,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // --- OCOM ---
 
-  const addOcomProcess = async (data: Omit<OcomProcess, "id" | "history">) => {
+  const addOcomProcess = async (data: Omit<OcomProcess, "id" | "history" | "trackerTasks" | "trackerModelId"> & { trackerId?: string }) => {
     const res = await fetch("/api/ocom", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -286,7 +289,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOcomProcesses((prev) => [created, ...prev]);
   };
 
-  const updateOcomProcess = async (id: string, updates: OcomUpdates) => {
+  const updateOcomProcess = async (id: string, updates: OcomUpdates): Promise<OcomProcess> => {
     const res = await fetch(`/api/ocom/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -294,6 +297,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
     const updated: OcomProcess = await res.json();
     setOcomProcesses((prev) => prev.map((o) => (o.id === id ? updated : o)));
+    return updated;
   };
 
   const addOcomHistoryEntry = async (ocomId: string, text: string) => {
@@ -338,6 +342,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const toggleOcomTrackerTask = async (ocomId: string, taskId: string) => {
+    const res = await fetch(`/api/ocom/${ocomId}/tasks/${taskId}`, { method: "PATCH" });
+    const { done } = await res.json();
+    setOcomProcesses((prev) =>
+      prev.map((o) =>
+        o.id === ocomId
+          ? { ...o, trackerTasks: o.trackerTasks.map((t) => (t.id === taskId ? { ...t, done } : t)) }
+          : o
+      )
+    );
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -368,6 +384,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addOcomHistoryEntry,
         updateOcomHistoryEntry,
         deleteOcomHistoryEntry,
+        toggleOcomTrackerTask,
       }}
     >
       {children}

@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     situacao,
     prazo,
     anoInicio,
+    trackerId,
   } = body;
 
   await getCurrentUser();
@@ -43,9 +44,29 @@ export async function POST(req: NextRequest) {
       situacao: situacao ?? "EM ANDAMENTO",
       prazo: parsePrazo(prazo),
       anoInicio: Number(anoInicio),
+      trackerId: trackerId || null,
     },
     include: ocomInclude,
   });
+
+  // Create OcomProcessTask rows if a tracker was specified
+  if (trackerId) {
+    const trackerTasks = await prisma.trackerTask.findMany({
+      where: { trackerId },
+      orderBy: { order: "asc" },
+    });
+    if (trackerTasks.length > 0) {
+      await prisma.ocomProcessTask.createMany({
+        data: trackerTasks.map((t) => ({ ocomProcessId: record.id, trackerTaskId: t.id })),
+        skipDuplicates: true,
+      });
+      const withTasks = await prisma.ocomProcess.findUniqueOrThrow({
+        where: { id: record.id },
+        include: ocomInclude,
+      });
+      return NextResponse.json(mapOcomFromDB(withTasks), { status: 201 });
+    }
+  }
 
   return NextResponse.json(mapOcomFromDB(record), { status: 201 });
 }

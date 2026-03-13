@@ -30,8 +30,9 @@ import {
 } from "./ui/select";
 import { useAppContext } from "@/context/app-context";
 
-export const RegisterNewTracker = () => {
-  const { addTracker, models } = useAppContext();
+export const RegisterNewTracker = ({ caixa }: { caixa?: string }) => {
+  const { addTracker, models: allModels } = useAppContext();
+  const models = caixa ? allModels.filter((m) => m.caixa === caixa) : allModels;
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [taskInput, setTaskInput] = useState("");
@@ -52,7 +53,7 @@ export const RegisterNewTracker = () => {
 
   const handleSubmit = () => {
     if (!subject.trim()) return;
-    addTracker(subject.trim(), tasks, selectedModelId);
+    addTracker(subject.trim(), tasks, selectedModelId, caixa);
     setSubject("");
     setTasks([]);
     setTaskInput("");

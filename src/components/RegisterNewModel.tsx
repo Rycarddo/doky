@@ -9,7 +9,7 @@ import { Separator } from "./ui/separator";
 import { Textarea } from "./ui/textarea";
 import { useAppContext } from "@/context/app-context";
 
-export const RegisterNewModel = () => {
+export const RegisterNewModel = ({ caixa }: { caixa?: string }) => {
   const { addModel } = useAppContext();
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
@@ -17,7 +17,7 @@ export const RegisterNewModel = () => {
 
   const handleSubmit = () => {
     if (!subject.trim()) return;
-    addModel(subject.trim(), content);
+    addModel(subject.trim(), content, caixa);
     setSubject("");
     setContent("");
     setOpen(false);

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { SearchProcess } from "@/components/SearchProcess";
 import { RegisterNewOcom } from "@/components/RegisterNewOcom";
 import { OcomDialog } from "@/components/OcomDialog";
+import { OcomObservacoesDialog } from "@/components/OcomObservacoesDialog";
 import { useAppContext } from "@/context/app-context";
 import type { OcomSituacao } from "@/lib/types";
 import { FileText } from "lucide-react";
@@ -218,7 +219,10 @@ export default function ControleOcomPage() {
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">{ocom.anoInicio}</TableCell>
               <TableCell>
-                <OcomDialog ocom={ocom} />
+                <div className="flex items-center justify-center gap-3">
+                  <OcomObservacoesDialog ocom={ocom} />
+                  <OcomDialog ocom={ocom} />
+                </div>
               </TableCell>
             </TableRow>
           ))}

@@ -47,7 +47,8 @@ model Process {
   trackerId String?
   tracker   Tracker? @relation(fields: [trackerId], references: [id])
 
-  tasks ProcessTask[]
+  tasks     ProcessTask[]
+  todoTasks Task[]
 }
 
 model User {
@@ -60,11 +61,13 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  processes   Process[]
-  history     ProcessHistory[]
-  ocomHistory OcomHistory[]
-  sessions    Session[]
-  accounts    Account[]
+  processes        Process[]
+  history          ProcessHistory[]
+  ocomHistory      OcomHistory[]
+  sessions         Session[]
+  accounts         Account[]
+  responsibleTasks Task[]   @relation("TaskResponsible")
+  createdTasks     Task[]   @relation("TaskCreator")
 }
 
 model Session {
@@ -121,16 +124,18 @@ model ProcessHistory {
 }
 
 model Tracker {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
+  id        String    @id @default(uuid())
+  name      String    @unique
+  caixa     CaixaType @default(OCNO)
+  createdAt DateTime  @default(now())
 
   documentTemplateId String?
   documentTemplate   DocumentTemplate? @relation("TrackerTemplate", fields: [documentTemplateId], references: [id])
 
   tasks TrackerTask[]
 
-  processes Process[]
+  processes     Process[]
+  ocomProcesses OcomProcess[]
 }
 
 model TrackerTask {
@@ -144,7 +149,8 @@ model TrackerTask {
   documentTemplateId String?
   documentTemplate   DocumentTemplate? @relation("TrackerTaskTemplate", fields: [documentTemplateId], references: [id])
 
-  processTasks ProcessTask[]
+  processTasks     ProcessTask[]
+  ocomProcessTasks OcomProcessTask[]
 
   @@unique([trackerId, order])
 }
@@ -163,6 +169,17 @@ model ProcessTask {
   @@unique([processId, trackerTaskId])
 }
 
+model OcomProcessTask {
+  id            String      @id @default(uuid())
+  ocomProcessId String
+  ocomProcess   OcomProcess @relation(fields: [ocomProcessId], references: [id], onDelete: Cascade)
+  trackerTaskId String
+  trackerTask   TrackerTask @relation(fields: [trackerTaskId], references: [id], onDelete: Cascade)
+  done          Boolean     @default(false)
+
+  @@unique([ocomProcessId, trackerTaskId])
+}
+
 model OcomProcess {
   id               String    @id @default(uuid())
   processo         String
@@ -173,11 +190,16 @@ model OcomProcess {
   situacao         String    @default("EM ANDAMENTO")
   prazo            DateTime?
   anoInicio        Int
+  observacoes      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  trackerId String?
+  tracker   Tracker? @relation(fields: [trackerId], references: [id])
+
   history OcomHistory[]
+  tasks   OcomProcessTask[]
 }
 
 model OcomHistory {
@@ -190,7 +212,7 @@ model OcomHistory {
   creatorId String
   creator   User   @relation(fields: [creatorId], references: [id])
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
 }
 
@@ -212,10 +234,31 @@ model UserCaixa {
   @@unique([approvedUserId, caixa])
 }
 
+model Task {
+  id        String          @id @default(uuid())
+  text      String
+  done      Boolean         @default(false)
+  priority  ProcessPriority @default(NORMAL)
+  deadline  DateTime?
+  caixa     CaixaType       @default(OCNO)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  responsibleId String
+  responsible   User   @relation("TaskResponsible", fields: [responsibleId], references: [id])
+
+  creatorId String
+  creator   User   @relation("TaskCreator", fields: [creatorId], references: [id])
+
+  processId String?
+  process   Process? @relation(fields: [processId], references: [id])
+}
+
 model DocumentTemplate {
-  id   String @id @default(uuid())
-  name String @unique
-  text String
+  id    String    @id @default(uuid())
+  name  String    @unique
+  text  String
+  caixa CaixaType @default(OCNO)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
