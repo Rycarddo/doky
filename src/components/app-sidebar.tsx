@@ -9,6 +9,9 @@ import {
   GraduationCap,
   Shield,
   SquareCheck,
+  BookUser,
+  PhoneCall,
+  Building2,
 } from "lucide-react";
 
 import { DatePicker } from "@/components/date-picker";
@@ -45,6 +48,8 @@ const ALL_GROUPS: NavGroup[] = [
       { href: "/modelos/ocom", label: "Modelos OCOM", icon: FileStack },
       { href: "/tracker/ocom", label: "Tracker OCOM", icon: GraduationCap },
       { href: "/tarefas/ocom", label: "Tarefas OCOM", icon: SquareCheck },
+      { href: "/contatos-ocom", label: "Contatos Op. OCOM", icon: PhoneCall },
+      { href: "/adm-ad", label: "ADM AD", icon: Building2 },
     ],
   },
   {
@@ -78,6 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       : ALL_GROUPS.filter((g) => g.caixa && userCaixas.includes(g.caixa));
     return [
       ...caixaGroups,
+      { caixa: null, items: [{ href: "/contatos", label: "Contatos", icon: BookUser }] },
       ...(isAdmin ? [{ caixa: null, items: [{ href: "/admin", label: "Admin", icon: Shield }] }] : []),
     ];
   }, [isAdmin, userCaixas]);

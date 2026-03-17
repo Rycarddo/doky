@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { mapTrackerFromDB, trackerInclude } from "@/lib/db-helpers";
+import { broadcast } from "@/lib/sse";
 
 type Params = { params: Promise<{ id: string }> };
+
+export async function DELETE(_req: NextRequest, { params }: Params) {
+  const { id } = await params;
+  // Unlink processes before deleting (no cascade rule on trackerId)
+  await prisma.process.updateMany({ where: { trackerId: id }, data: { trackerId: null } });
+  await prisma.ocomProcess.updateMany({ where: { trackerId: id }, data: { trackerId: null } });
+  await prisma.tracker.delete({ where: { id } });
+  broadcast("trackers");
+  broadcast("processes");
+  broadcast("ocom");
+  return new NextResponse(null, { status: 204 });
+}
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
@@ -82,5 +95,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
   }
 
+  broadcast("trackers");
+  // Tracker edits may rebuild process/ocom task rows
+  if (taskIdsToDelete?.length || tasksToAdd?.length) {
+    broadcast("processes");
+    broadcast("ocom");
+  }
   return NextResponse.json(mapTrackerFromDB(tracker));
 }

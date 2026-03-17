@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { mapTrackerFromDB, trackerInclude } from "@/lib/db-helpers";
+import { broadcast } from "@/lib/sse";
 
 export async function GET(req: NextRequest) {
   const caixa = req.nextUrl.searchParams.get("caixa");
@@ -37,5 +38,6 @@ export async function POST(req: NextRequest) {
     include: trackerInclude,
   });
 
+  broadcast("trackers");
   return NextResponse.json(mapTrackerFromDB(tracker), { status: 201 });
 }

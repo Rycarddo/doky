@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, mapOcomFromDB, ocomInclude } from "@/lib/db-helpers";
+import { broadcast } from "@/lib/sse";
 
 export async function GET() {
   const records = await prisma.ocomProcess.findMany({
@@ -64,9 +65,11 @@ export async function POST(req: NextRequest) {
         where: { id: record.id },
         include: ocomInclude,
       });
+      broadcast("ocom");
       return NextResponse.json(mapOcomFromDB(withTasks), { status: 201 });
     }
   }
 
+  broadcast("ocom");
   return NextResponse.json(mapOcomFromDB(record), { status: 201 });
 }

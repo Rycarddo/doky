@@ -13,11 +13,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAppContext } from "@/context/app-context";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Trash2 } from "lucide-react";
 
 const TrackerPage = () => {
-  const { trackers } = useAppContext();
+  const { trackers, deleteTracker } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredTrackers = useMemo(() => {
@@ -46,13 +57,14 @@ const TrackerPage = () => {
             <TableHead style={{ width: "10rem" }}>Última atualização</TableHead>
             <TableHead style={{ width: "4rem" }} className="text-center">Editar</TableHead>
             <TableHead style={{ width: "4rem" }} className="text-center">Abrir</TableHead>
+            <TableHead style={{ width: "4rem" }} className="text-center">Excluir</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
           {filteredTrackers.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4}>
+              <TableCell colSpan={5}>
                 <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
                   <GraduationCap className="size-10 opacity-30" />
                   <p className="text-sm">
@@ -73,6 +85,27 @@ const TrackerPage = () => {
               </TableCell>
               <TableCell className="text-center">
                 <TrackerDialog tracker={tracker} />
+              </TableCell>
+              <TableCell className="text-center">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Trash2 className="cursor-pointer text-muted-foreground hover:text-destructive transition-colors mx-auto size-4" />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir tracker</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja excluir o tracker <strong>&quot;{tracker.subject}&quot;</strong>? Essa ação não pode ser desfeita. Documentos vinculados a este tracker perderão a associação.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteTracker(tracker.id)}>
+                        Excluir
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </TableCell>
             </TableRow>
           ))}

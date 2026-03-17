@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
+import { TrackerDialogShell } from "./ui/tracker-dialog-shell";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
@@ -45,7 +39,6 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
   const [tasksToAdd, setTasksToAdd] = useState<{ text: string; modelId?: string }[]>([]);
   const [taskIdsToDelete, setTaskIdsToDelete] = useState<string[]>([]);
 
-  // Existing tasks minus the ones marked for deletion
   const visibleExistingTasks = tracker.tasks.filter(
     (t) => !taskIdsToDelete.includes(t.id)
   );
@@ -77,30 +70,27 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Pencil className="size-4 cursor-pointer" />
-      </DialogTrigger>
-
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Editar Tracker</DialogTitle>
-        </DialogHeader>
-
-        <Separator />
-
-        <Label className="text-sm">Assunto do tracker</Label>
-        <Input
-          className="rounded-full"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="Digite o assunto do tracker"
-        />
-
-        <Separator />
-
-        <Label className="text-sm">Adicionar nova tarefa</Label>
+    <TrackerDialogShell
+      open={open}
+      onOpenChange={setOpen}
+      trigger={<Pencil className="size-4 cursor-pointer" />}
+      title="Editar Tracker"
+    >
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
+          <Label className="text-sm">Assunto do tracker</Label>
+          <Input
+            className="rounded-full"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Digite o assunto do tracker"
+          />
+        </div>
+
+        <Separator />
+
+        <div className="flex flex-col gap-2">
+          <Label className="text-sm">Adicionar nova tarefa</Label>
           <div className="flex items-center gap-2">
             <Input
               className="rounded-full"
@@ -137,71 +127,73 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
 
         <Separator />
 
-        <Label className="text-sm">Tarefas</Label>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Tarefa</TableHead>
-              <TableHead className="w-4">Excluir</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {visibleExistingTasks.length === 0 && tasksToAdd.length === 0 && (
+        <div className="flex flex-col gap-2">
+          <Label className="text-sm">Tarefas</Label>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={2} className="text-center text-muted-foreground">
-                  Nenhuma tarefa.
-                </TableCell>
+                <TableHead>Tarefa</TableHead>
+                <TableHead className="w-4">Excluir</TableHead>
               </TableRow>
-            )}
-            {visibleExistingTasks.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell>
-                  <div className="flex flex-col gap-0.5">
-                    <span>{task.text}</span>
-                    {task.modelId && (
-                      <span className="text-xs text-muted-foreground">
-                        Modelo: {models.find((m) => m.id === task.modelId)?.subject}
-                      </span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Trash2
-                    className="cursor-pointer size-4 text-red-500"
-                    onClick={() => handleDeleteExisting(task.id)}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-            {tasksToAdd.map((task, index) => (
-              <TableRow key={`new-${index}`}>
-                <TableCell>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-muted-foreground italic">{task.text} (nova)</span>
-                    {task.modelId && (
-                      <span className="text-xs text-muted-foreground">
-                        Modelo: {models.find((m) => m.id === task.modelId)?.subject}
-                      </span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Trash2
-                    className="cursor-pointer size-4"
-                    onClick={() => handleDeleteNew(index)}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {visibleExistingTasks.length === 0 && tasksToAdd.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center text-muted-foreground">
+                    Nenhuma tarefa.
+                  </TableCell>
+                </TableRow>
+              )}
+              {visibleExistingTasks.map((task) => (
+                <TableRow key={task.id}>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <span>{task.text}</span>
+                      {task.modelId && (
+                        <span className="text-xs text-muted-foreground">
+                          Modelo: {models.find((m) => m.id === task.modelId)?.subject}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Trash2
+                      className="cursor-pointer size-4 text-red-500"
+                      onClick={() => handleDeleteExisting(task.id)}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+              {tasksToAdd.map((task, index) => (
+                <TableRow key={`new-${index}`}>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-muted-foreground italic">{task.text} (nova)</span>
+                      {task.modelId && (
+                        <span className="text-xs text-muted-foreground">
+                          Modelo: {models.find((m) => m.id === task.modelId)?.subject}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Trash2
+                      className="cursor-pointer size-4"
+                      onClick={() => handleDeleteNew(index)}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
 
-        <div className="flex justify-end mt-2">
+        <div className="flex justify-end">
           <Button className="rounded-full cursor-pointer" onClick={handleSubmit}>
             Salvar alterações
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </TrackerDialogShell>
   );
 };

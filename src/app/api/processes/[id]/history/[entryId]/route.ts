@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/db-helpers";
+import { broadcast } from "@/lib/sse";
 
 type Params = { params: Promise<{ id: string; entryId: string }> };
 
@@ -15,6 +16,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     include: { creator: { select: { name: true } } },
   });
 
+  broadcast("processes");
   return NextResponse.json({
     id: entry.id,
     text: entry.text,
@@ -27,5 +29,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { entryId } = await params;
   await prisma.processHistory.delete({ where: { id: entryId } });
+  broadcast("processes");
   return new NextResponse(null, { status: 204 });
 }

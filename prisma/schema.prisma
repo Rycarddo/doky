@@ -28,6 +28,24 @@ enum CaixaType {
   CIVA_AZ
 }
 
+enum OperatorLocation {
+  SBCZ
+  SBTF
+  SBAT
+  SBHT
+  SBCJ
+  SBIH
+  SBMA
+  SBTB
+  SBJI
+  SBUY
+  SBRD
+  SBSO
+  SBSI
+  SSKW
+  SWGN
+}
+
 model Process {
   id            String          @id @default(uuid())
   sigad         String          @unique
@@ -252,6 +270,38 @@ model Task {
 
   processId String?
   process   Process? @relation(fields: [processId], references: [id])
+}
+
+enum AdmAdGroup {
+  DNB
+  EPTA
+  CIVA_AZ
+}
+
+model AdmAdContact {
+  id                   String     @id @default(uuid())
+  group                AdmAdGroup
+  radio                String     @default("")
+  oprOrgao             String     @default("")
+  oprAd                String     @default("")
+  horarioFuncionamento String     @default("")
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+}
+
+model OcomOperationalContact {
+  id       String   @id @default(uuid())
+  orgaoAts String
+  tf2      String   @default("")
+  tf4      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  location  OperatorLocation @id
+  content   String           @default("")
+  updatedAt DateTime         @updatedAt
 }
 
 model DocumentTemplate {

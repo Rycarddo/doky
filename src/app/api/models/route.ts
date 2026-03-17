@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { mapModelFromDB } from "@/lib/db-helpers";
+import { broadcast } from "@/lib/sse";
 
 export async function GET(req: NextRequest) {
   const caixa = req.nextUrl.searchParams.get("caixa");
@@ -18,5 +19,6 @@ export async function POST(req: NextRequest) {
     data: { name: subject, text: content, caixa: caixa ?? "OCNO" },
   });
 
+  broadcast("models");
   return NextResponse.json(mapModelFromDB(model), { status: 201 });
 }

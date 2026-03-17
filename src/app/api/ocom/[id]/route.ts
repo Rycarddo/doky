@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { mapOcomFromDB, ocomInclude } from "@/lib/db-helpers";
+import { broadcast } from "@/lib/sse";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -48,11 +49,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     include: ocomInclude,
   });
 
+  broadcast("ocom");
   return NextResponse.json(mapOcomFromDB(record));
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
   await prisma.ocomProcess.delete({ where: { id } });
+  broadcast("ocom");
   return NextResponse.json({ ok: true });
 }

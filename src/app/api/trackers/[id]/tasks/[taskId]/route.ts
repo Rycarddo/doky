@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { broadcast } from "@/lib/sse";
 
 type Params = { params: Promise<{ id: string; taskId: string }> };
 
@@ -22,6 +23,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     },
   });
 
+  broadcast("trackers");
   return NextResponse.json({
     id: task.id,
     text: task.title,

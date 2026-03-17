@@ -56,6 +56,7 @@ type AppContextType = {
   updateTrackerTaskModel: (trackerId: string, taskId: string, modelId: string | undefined) => Promise<void>;
   toggleTrackerTask: (trackerId: string, taskId: string) => Promise<void>;
   editTracker: (trackerId: string, subject: string, tasksToAdd: { text: string; modelId?: string }[], taskIdsToDelete: string[]) => Promise<void>;
+  deleteTracker: (id: string) => Promise<void>;
   // Models
   models: Model[];
   addModel: (subject: string, content: string, caixa?: string) => Promise<void>;
@@ -94,6 +95,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setOcomProcesses(ocoms);
     }
     loadData();
+
+    const es = new EventSource("/api/sse");
+    es.onmessage = (e) => {
+      const event = e.data as string;
+      if (event === "processes") {
+        fetch("/api/processes").then((r) => r.json()).then(setDocuments);
+      } else if (event === "ocom") {
+        fetch("/api/ocom").then((r) => r.json()).then(setOcomProcesses);
+      } else if (event === "trackers") {
+        fetch("/api/trackers").then((r) => r.json()).then(setTrackers);
+      } else if (event === "models") {
+        fetch("/api/models").then((r) => r.json()).then(setModels);
+      }
+    };
+    return () => es.close();
   }, []);
 
   // --- Documents ---
@@ -240,6 +256,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTrackers((prev) => prev.map((t) => (t.id === trackerId ? updated : t)));
   };
 
+  const deleteTracker = async (id: string) => {
+    await fetch(`/api/trackers/${id}`, { method: "DELETE" });
+    setTrackers((prev) => prev.filter((t) => t.id !== id));
+  };
+
   const toggleTrackerTask = async (trackerId: string, taskId: string) => {
     setTrackers((prev) =>
       prev.map((t) =>
@@ -373,6 +394,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateTrackerTaskModel,
         toggleTrackerTask,
         editTracker,
+        deleteTracker,
         models,
         addModel,
         updateModel,

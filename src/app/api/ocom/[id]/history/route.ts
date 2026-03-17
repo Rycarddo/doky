@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/db-helpers";
+import { broadcast } from "@/lib/sse";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     include: { creator: { select: { name: true } } },
   });
 
+  broadcast("ocom");
   return NextResponse.json(
     {
       id: entry.id,

@@ -27,7 +27,7 @@ export function LoginForm({
         onClick={() =>
           authClient.signIn.social({
             provider: "google",
-            callbackURL: "/",
+            callbackURL: "/auth/redirect",
             errorCallbackURL: "/login?error=unauthorized",
           })
         }

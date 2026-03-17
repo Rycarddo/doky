@@ -6,6 +6,7 @@ import {
   parsePtBRDate,
   processInclude,
 } from "@/lib/db-helpers";
+import { broadcast } from "@/lib/sse";
 
 export async function GET() {
   const processes = await prisma.process.findMany({
@@ -42,5 +43,6 @@ export async function POST(req: NextRequest) {
     include: processInclude,
   });
 
+  broadcast("processes");
   return NextResponse.json(mapProcessToAppDocument(process), { status: 201 });
 }
