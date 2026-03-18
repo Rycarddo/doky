@@ -82,6 +82,7 @@ model User {
   processes        Process[]
   history          ProcessHistory[]
   ocomHistory      OcomHistory[]
+  ocomChangeLog    OcomChangeLog[]
   sessions         Session[]
   accounts         Account[]
   responsibleTasks Task[]   @relation("TaskResponsible")
@@ -216,13 +217,30 @@ model OcomProcess {
   trackerId String?
   tracker   Tracker? @relation(fields: [trackerId], references: [id])
 
-  history OcomHistory[]
-  tasks   OcomProcessTask[]
+  history     OcomHistory[]
+  tasks       OcomProcessTask[]
+  changeLog   OcomChangeLog[]
+}
+
+model OcomChangeLog {
+  id            String      @id @default(uuid())
+  action        String
+  field         String?
+  oldValue      String?
+  newValue      String?
+  createdAt     DateTime    @default(now())
+
+  ocomProcessId String
+  ocomProcess   OcomProcess @relation(fields: [ocomProcessId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model OcomHistory {
-  id   String @id @default(uuid())
-  text String
+  id        String @id @default(uuid())
+  text      String
+  estadoDoc String @default("Minuta")
 
   ocomProcessId String
   ocomProcess   OcomProcess @relation(fields: [ocomProcessId], references: [id], onDelete: Cascade)

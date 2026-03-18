@@ -36,6 +36,7 @@ import type { OcomProcess, OcomHistoryEntry, OcomSituacao } from "@/lib/types";
 
 const CATEGORIAS = ["EPTA A", "EPTA ESPECIAL", "ETEX", "EQI", "OUTROS"] as const;
 const SITUACOES: OcomSituacao[] = ["EM ANDAMENTO", "CONCLUÍDO", "ARQUIVADO", "OUTROS"];
+const ESTADOS_DOC = ["Minuta", "Assinado", "Expedido", "Publicado"] as const;
 
 // Convert DD/MM/YYYY to YYYY-MM-DD for <input type="date">
 function ptBRToInputDate(ptBR: string): string {
@@ -62,8 +63,10 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [histText, setHistText] = useState("");
+  const [histEstadoDoc, setHistEstadoDoc] = useState<string>("Minuta");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
+  const [editEstadoDoc, setEditEstadoDoc] = useState<string>("Minuta");
 
   // Tracker state
   const [trackerId, setTrackerId] = useState(ocom.trackerId ?? "");
@@ -100,26 +103,30 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
 
   const handleInsertHistory = () => {
     if (!histText.trim()) return;
-    addOcomHistoryEntry(ocom.id, histText.trim());
+    addOcomHistoryEntry(ocom.id, histText.trim(), histEstadoDoc);
     setHistText("");
+    setHistEstadoDoc("Minuta");
   };
 
   const startEdit = (entry: OcomHistoryEntry) => {
     setEditingId(entry.id);
     setEditText(entry.text);
+    setEditEstadoDoc(entry.estadoDoc);
   };
 
   const saveEdit = () => {
     if (editingId && editText.trim()) {
-      updateOcomHistoryEntry(ocom.id, editingId, editText.trim());
+      updateOcomHistoryEntry(ocom.id, editingId, editText.trim(), editEstadoDoc);
     }
     setEditingId(null);
     setEditText("");
+    setEditEstadoDoc("Minuta");
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditText("");
+    setEditEstadoDoc("Minuta");
   };
 
   const handleChangeTracker = async (newTrackerId: string) => {
@@ -160,6 +167,7 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
             <TabsTrigger value="historico">Histórico</TabsTrigger>
             <TabsTrigger value="tracker">Tracker</TabsTrigger>
             <TabsTrigger value="config">Config. Iniciais</TabsTrigger>
+            <TabsTrigger value="changelog">Histórico Alterações</TabsTrigger>
           </TabsList>
 
           {/* Histórico tab */}
@@ -176,6 +184,21 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
                   }}
                 />
               </Label>
+              <div className="flex flex-col gap-1">
+                <Label>Estado Doc.</Label>
+                <Select value={histEstadoDoc} onValueChange={setHistEstadoDoc}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {ESTADOS_DOC.map((e) => (
+                        <SelectItem key={e} value={e}>{e}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button onClick={handleInsertHistory}>Inserir</Button>
             </div>
 
@@ -188,6 +211,7 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
                     <TableHead style={{ width: "10rem" }}>Data</TableHead>
                     <TableHead style={{ width: "7rem" }}>Usuário</TableHead>
                     <TableHead>Texto</TableHead>
+                    <TableHead style={{ width: "8rem" }}>Estado Doc.</TableHead>
                     <TableHead style={{ width: "4rem" }}>Editar</TableHead>
                     <TableHead style={{ width: "4rem" }}>Deletar</TableHead>
                   </TableRow>
@@ -195,7 +219,7 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
                 <TableBody>
                   {ocom.history.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
                         Nenhum histórico registrado.
                       </TableCell>
                     </TableRow>
@@ -219,6 +243,24 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
                           />
                         ) : (
                           <span className="text-sm break-all">{entry.text}</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingId === entry.id ? (
+                          <Select value={editEstadoDoc} onValueChange={setEditEstadoDoc}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {ESTADOS_DOC.map((e) => (
+                                  <SelectItem key={e} value={e}>{e}</SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-sm">{entry.estadoDoc}</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -401,6 +443,42 @@ export const OcomDialog = ({ ocom }: OcomDialogProps) => {
                   Salvar alterações
                 </Button>
               </div>
+            </div>
+          </TabsContent>
+          {/* Histórico Alterações tab */}
+          <TabsContent value="changelog">
+            <div className="w-full [&>div]:overflow-x-hidden">
+              <Table className="[&_th]:px-3 [&_td]:px-3 [&_th]:text-center [&_td]:text-center" style={{ tableLayout: "fixed", width: "100%" }}>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead style={{ width: "10rem" }}>Data/Hora</TableHead>
+                    <TableHead style={{ width: "7rem" }}>Usuário</TableHead>
+                    <TableHead style={{ width: "10rem" }}>Ação</TableHead>
+                    <TableHead style={{ width: "7rem" }}>Campo</TableHead>
+                    <TableHead>Valor Anterior</TableHead>
+                    <TableHead>Novo Valor</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ocom.changeLog.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        Nenhuma alteração registrada.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {ocom.changeLog.map((entry) => (
+                    <TableRow key={entry.id}>
+                      <TableCell className="whitespace-nowrap text-sm">{entry.date}</TableCell>
+                      <TableCell className="text-sm">{entry.user}</TableCell>
+                      <TableCell className="text-sm">{entry.action}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{entry.field ?? "—"}</TableCell>
+                      <TableCell className="break-all whitespace-normal text-sm text-muted-foreground">{entry.oldValue ?? "—"}</TableCell>
+                      <TableCell className="break-all whitespace-normal text-sm">{entry.newValue ?? "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </TabsContent>
         </Tabs>

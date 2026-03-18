@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { mapOcomFromDB, ocomInclude } from "@/lib/db-helpers";
+import { getCurrentUser, mapOcomFromDB, ocomInclude, logOcomChange } from "@/lib/db-helpers";
 import { broadcast } from "@/lib/sse";
 
 type Params = { params: Promise<{ id: string }> };
@@ -12,9 +12,25 @@ function parsePrazo(value: string | null | undefined): Date | null {
   return new Date(year, month - 1, day);
 }
 
+const CONFIG_FIELD_LABELS: Record<string, string> = {
+  processo: "Processo",
+  categoria: "Categoria",
+  desigTelegrafica: "Desig. Telegráfica",
+  localidade: "Localidade",
+  situacao: "Situação",
+  observacoes: "Observações",
+};
+
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const body = await req.json();
+  const user = await getCurrentUser();
+
+  // Fetch current state before update for comparison
+  const current = await prisma.ocomProcess.findUniqueOrThrow({
+    where: { id },
+    include: { tracker: { select: { id: true, name: true } } },
+  });
 
   const data: Record<string, unknown> = {};
 
@@ -49,8 +65,88 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     include: ocomInclude,
   });
 
+  // --- Log changes ---
+
+  // Tracker change
+  if (body.trackerId !== undefined && (body.trackerId || null) !== current.trackerId) {
+    const newTrackerId = body.trackerId || null;
+    let newTrackerName: string | null = null;
+    if (newTrackerId) {
+      const t = await prisma.tracker.findUnique({ where: { id: newTrackerId }, select: { name: true } });
+      newTrackerName = t?.name ?? null;
+    }
+    await logOcomChange({
+      ocomProcessId: id,
+      userId: user.id,
+      action: newTrackerId ? "Vinculou tracker" : "Desvinculou tracker",
+      oldValue: current.tracker?.name ?? "Sem tracker",
+      newValue: newTrackerName ?? "Sem tracker",
+    });
+  }
+
+  // String config fields
+  for (const [field, label] of Object.entries(CONFIG_FIELD_LABELS)) {
+    if (body[field] !== undefined && body[field] !== current[field as keyof typeof current]) {
+      await logOcomChange({
+        ocomProcessId: id,
+        userId: user.id,
+        action: "Editou configurações",
+        field: label,
+        oldValue: String(current[field as keyof typeof current] ?? "—"),
+        newValue: String(body[field] ?? "—"),
+      });
+    }
+  }
+
+  // Empresa
+  if (body.empresa !== undefined) {
+    const oldEmpresa = current.empresa ?? "";
+    const newEmpresa = body.empresa || "";
+    if (oldEmpresa !== newEmpresa) {
+      await logOcomChange({
+        ocomProcessId: id,
+        userId: user.id,
+        action: "Editou configurações",
+        field: "Empresa",
+        oldValue: oldEmpresa || "—",
+        newValue: newEmpresa || "—",
+      });
+    }
+  }
+
+  // Ano Início
+  if (body.anoInicio !== undefined && Number(body.anoInicio) !== current.anoInicio) {
+    await logOcomChange({
+      ocomProcessId: id,
+      userId: user.id,
+      action: "Editou configurações",
+      field: "Ano Início",
+      oldValue: String(current.anoInicio),
+      newValue: String(body.anoInicio),
+    });
+  }
+
+  // Prazo
+  if (body.prazo !== undefined) {
+    const newPrazo = body.prazo ? parsePrazo(body.prazo) : null;
+    const oldStr = current.prazo ? current.prazo.toLocaleDateString("pt-BR") : null;
+    const newStr = newPrazo ? newPrazo.toLocaleDateString("pt-BR") : null;
+    if (oldStr !== newStr) {
+      await logOcomChange({
+        ocomProcessId: id,
+        userId: user.id,
+        action: "Editou configurações",
+        field: "Prazo",
+        oldValue: oldStr ?? "—",
+        newValue: newStr ?? "—",
+      });
+    }
+  }
+
+  // Re-fetch after logging so response includes new changelog entries
+  const fresh = await prisma.ocomProcess.findUniqueOrThrow({ where: { id }, include: ocomInclude });
   broadcast("ocom");
-  return NextResponse.json(mapOcomFromDB(record));
+  return NextResponse.json(mapOcomFromDB(fresh));
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {

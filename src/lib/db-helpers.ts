@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { prisma } from "./prisma";
 import { auth } from "./auth";
-import type { AppDocument, Tracker, Model, HistoryEntry, TrackerTask, OcomProcess, OcomHistoryEntry, OcomSituacao } from "./types";
+import type { AppDocument, Tracker, Model, HistoryEntry, TrackerTask, OcomProcess, OcomHistoryEntry, OcomChangeLogEntry, OcomSituacao } from "./types";
 
 // Parses "DD/MM/YYYY" format (pt-BR) to Date, returns null for empty strings
 export function parsePtBRDate(value: string | null | undefined): Date | null {
@@ -173,7 +173,9 @@ type OcomFromDB = {
   history: {
     id: string;
     text: string;
+    estadoDoc: string;
     createdAt: Date;
+    updatedAt: Date | null;
     creator: { name: string };
   }[];
   tasks: {
@@ -183,6 +185,15 @@ type OcomFromDB = {
       title: string;
       documentTemplateId: string | null;
     };
+  }[];
+  changeLog: {
+    id: string;
+    action: string;
+    field: string | null;
+    oldValue: string | null;
+    newValue: string | null;
+    createdAt: Date;
+    user: { name: string };
   }[];
 };
 
@@ -204,7 +215,8 @@ export function mapOcomFromDB(o: OcomFromDB): OcomProcess {
       (h): OcomHistoryEntry => ({
         id: h.id,
         text: h.text,
-        date: h.createdAt.toLocaleString("pt-BR"),
+        estadoDoc: h.estadoDoc,
+        date: (h.updatedAt ?? h.createdAt).toLocaleString("pt-BR"),
         user: h.creator.name,
       })
     ),
@@ -216,7 +228,38 @@ export function mapOcomFromDB(o: OcomFromDB): OcomProcess {
         modelId: t.trackerTask.documentTemplateId ?? undefined,
       })
     ),
+    changeLog: o.changeLog.map(
+      (c): OcomChangeLogEntry => ({
+        id: c.id,
+        date: c.createdAt.toLocaleString("pt-BR"),
+        user: c.user.name,
+        action: c.action,
+        field: c.field ?? undefined,
+        oldValue: c.oldValue ?? undefined,
+        newValue: c.newValue ?? undefined,
+      })
+    ),
   };
+}
+
+export async function logOcomChange(params: {
+  ocomProcessId: string;
+  userId: string;
+  action: string;
+  field?: string | null;
+  oldValue?: string | null;
+  newValue?: string | null;
+}) {
+  await prisma.ocomChangeLog.create({
+    data: {
+      ocomProcessId: params.ocomProcessId,
+      userId: params.userId,
+      action: params.action,
+      field: params.field ?? null,
+      oldValue: params.oldValue ?? null,
+      newValue: params.newValue ?? null,
+    },
+  });
 }
 
 export const ocomInclude = {
@@ -229,5 +272,10 @@ export const ocomInclude = {
     include: {
       trackerTask: { select: { title: true, documentTemplateId: true } },
     },
+  },
+  changeLog: {
+    include: { user: { select: { name: true } } },
+    orderBy: { createdAt: "desc" as const },
+    take: 200,
   },
 };

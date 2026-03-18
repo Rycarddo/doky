@@ -7,7 +7,6 @@ import type {
   Model,
   Priority,
   OcomProcess,
-  OcomHistoryEntry,
 } from "@/lib/types";
 
 type DocumentUpdates = Partial<
@@ -64,11 +63,11 @@ type AppContextType = {
   deleteModel: (id: string) => Promise<void>;
   // OCOM
   ocomProcesses: OcomProcess[];
-  addOcomProcess: (data: Omit<OcomProcess, "id" | "history" | "trackerTasks" | "trackerModelId"> & { trackerId?: string }) => Promise<void>;
+  addOcomProcess: (data: Omit<OcomProcess, "id" | "history" | "trackerTasks" | "trackerModelId" | "changeLog"> & { trackerId?: string }) => Promise<void>;
   updateOcomProcess: (id: string, updates: OcomUpdates) => Promise<OcomProcess>;
   deleteOcomProcess: (id: string) => Promise<void>;
-  addOcomHistoryEntry: (ocomId: string, text: string) => Promise<void>;
-  updateOcomHistoryEntry: (ocomId: string, entryId: string, text: string) => Promise<void>;
+  addOcomHistoryEntry: (ocomId: string, text: string, estadoDoc: string) => Promise<void>;
+  updateOcomHistoryEntry: (ocomId: string, entryId: string, text: string, estadoDoc: string) => Promise<void>;
   deleteOcomHistoryEntry: (ocomId: string, entryId: string) => Promise<void>;
   toggleOcomTrackerTask: (ocomId: string, taskId: string) => Promise<void>;
 };
@@ -300,7 +299,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // --- OCOM ---
 
-  const addOcomProcess = async (data: Omit<OcomProcess, "id" | "history" | "trackerTasks" | "trackerModelId"> & { trackerId?: string }) => {
+  const addOcomProcess = async (data: Omit<OcomProcess, "id" | "history" | "trackerTasks" | "trackerModelId" | "changeLog"> & { trackerId?: string }) => {
     const res = await fetch("/api/ocom", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -321,32 +320,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return updated;
   };
 
-  const addOcomHistoryEntry = async (ocomId: string, text: string) => {
+  const addOcomHistoryEntry = async (ocomId: string, text: string, estadoDoc: string) => {
     const res = await fetch(`/api/ocom/${ocomId}/history`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, estadoDoc }),
     });
-    const entry: OcomHistoryEntry = await res.json();
-    setOcomProcesses((prev) =>
-      prev.map((o) => (o.id === ocomId ? { ...o, history: [...o.history, entry] } : o))
-    );
+    const fresh: OcomProcess = await res.json();
+    setOcomProcesses((prev) => prev.map((o) => (o.id === ocomId ? fresh : o)));
   };
 
-  const updateOcomHistoryEntry = async (ocomId: string, entryId: string, text: string) => {
+  const updateOcomHistoryEntry = async (ocomId: string, entryId: string, text: string, estadoDoc: string) => {
     const res = await fetch(`/api/ocom/${ocomId}/history/${entryId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, estadoDoc }),
     });
-    const updated: OcomHistoryEntry = await res.json();
-    setOcomProcesses((prev) =>
-      prev.map((o) =>
-        o.id === ocomId
-          ? { ...o, history: o.history.map((h) => (h.id === entryId ? updated : h)) }
-          : o
-      )
-    );
+    const fresh: OcomProcess = await res.json();
+    setOcomProcesses((prev) => prev.map((o) => (o.id === ocomId ? fresh : o)));
   };
 
   const deleteOcomProcess = async (id: string) => {
@@ -355,24 +346,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteOcomHistoryEntry = async (ocomId: string, entryId: string) => {
-    await fetch(`/api/ocom/${ocomId}/history/${entryId}`, { method: "DELETE" });
-    setOcomProcesses((prev) =>
-      prev.map((o) =>
-        o.id === ocomId ? { ...o, history: o.history.filter((h) => h.id !== entryId) } : o
-      )
-    );
+    const res = await fetch(`/api/ocom/${ocomId}/history/${entryId}`, { method: "DELETE" });
+    const fresh: OcomProcess = await res.json();
+    setOcomProcesses((prev) => prev.map((o) => (o.id === ocomId ? fresh : o)));
   };
 
   const toggleOcomTrackerTask = async (ocomId: string, taskId: string) => {
     const res = await fetch(`/api/ocom/${ocomId}/tasks/${taskId}`, { method: "PATCH" });
-    const { done } = await res.json();
-    setOcomProcesses((prev) =>
-      prev.map((o) =>
-        o.id === ocomId
-          ? { ...o, trackerTasks: o.trackerTasks.map((t) => (t.id === taskId ? { ...t, done } : t)) }
-          : o
-      )
-    );
+    const fresh: OcomProcess = await res.json();
+    setOcomProcesses((prev) => prev.map((o) => (o.id === ocomId ? fresh : o)));
   };
 
   return (

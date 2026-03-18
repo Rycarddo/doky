@@ -53,11 +53,22 @@ export type Model = {
 export type OcomCategoria = "EPTA A" | "EPTA ESPECIAL" | "ETEX" | "EQI" | "OUTROS";
 export type OcomSituacao = "ARQUIVADO" | "CONCLUÍDO" | "EM ANDAMENTO" | "OUTROS";
 
+export type OcomChangeLogEntry = {
+  id: string;
+  date: string;
+  user: string;
+  action: string;
+  field?: string;
+  oldValue?: string;
+  newValue?: string;
+};
+
 export type OcomHistoryEntry = {
   id: string;
   date: string;
   user: string;
   text: string;
+  estadoDoc: string;
 };
 
 export type OcomProcess = {
@@ -75,4 +86,5 @@ export type OcomProcess = {
   trackerModelId?: string;
   trackerTasks: TrackerTask[];
   observacoes?: string;
+  changeLog: OcomChangeLogEntry[];
 };
