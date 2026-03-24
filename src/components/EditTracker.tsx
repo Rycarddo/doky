@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "./ui/button";
 import { TrackerDialogShell } from "./ui/tracker-dialog-shell";
 import { Input } from "./ui/input";
@@ -39,9 +39,18 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
   const [tasksToAdd, setTasksToAdd] = useState<{ text: string; modelId?: string }[]>([]);
   const [taskIdsToDelete, setTaskIdsToDelete] = useState<string[]>([]);
 
-  const visibleExistingTasks = tracker.tasks.filter(
-    (t) => !taskIdsToDelete.includes(t.id)
+  // Ordered list of existing task IDs (excluding deleted)
+  const [orderedExistingIds, setOrderedExistingIds] = useState<string[]>(
+    tracker.tasks.map((t) => t.id)
   );
+
+  // Model overrides for existing tasks
+  const [taskModelOverrides, setTaskModelOverrides] = useState<Record<string, string | null>>({});
+
+  const visibleExistingTasks = orderedExistingIds
+    .filter((id) => !taskIdsToDelete.includes(id))
+    .map((id) => tracker.tasks.find((t) => t.id === id)!)
+    .filter(Boolean);
 
   const handleAddTask = () => {
     if (!taskInput.trim()) return;
@@ -61,11 +70,55 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
     setTasksToAdd((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const moveExisting = (index: number, direction: -1 | 1) => {
+    const visibleIds = visibleExistingTasks.map((t) => t.id);
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= visibleIds.length) return;
+    const updated = [...visibleIds];
+    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+    // Re-build orderedExistingIds preserving deleted ones at their positions
+    setOrderedExistingIds((prev) => {
+      const result = [...prev];
+      const fromPos = result.indexOf(visibleIds[index]);
+      const toPos = result.indexOf(visibleIds[newIndex]);
+      [result[fromPos], result[toPos]] = [result[toPos], result[fromPos]];
+      return result;
+    });
+  };
+
+  const moveNew = (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= tasksToAdd.length) return;
+    setTasksToAdd((prev) => {
+      const updated = [...prev];
+      [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+      return updated;
+    });
+  };
+
+  const handleTaskModelOverride = (taskId: string, val: string) => {
+    setTaskModelOverrides((prev) => ({
+      ...prev,
+      [taskId]: val === "none" ? null : val,
+    }));
+  };
+
   const handleSubmit = async () => {
     if (!subject.trim()) return;
-    await editTracker(tracker.id, subject.trim(), tasksToAdd, taskIdsToDelete);
+
+    const newTaskOrder = visibleExistingTasks.map((t) => t.id);
+
+    await editTracker(
+      tracker.id,
+      subject.trim(),
+      tasksToAdd,
+      taskIdsToDelete,
+      newTaskOrder,
+      taskModelOverrides,
+    );
     setTasksToAdd([]);
     setTaskIdsToDelete([]);
+    setTaskModelOverrides({});
     setOpen(false);
   };
 
@@ -75,6 +128,7 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
       onOpenChange={setOpen}
       trigger={<Pencil className="size-4 cursor-pointer" />}
       title="Editar Tracker"
+      width="min(95vw, 52rem)"
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -133,27 +187,64 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
             <TableHeader>
               <TableRow>
                 <TableHead>Tarefa</TableHead>
+                <TableHead className="w-48">Modelo</TableHead>
+                <TableHead className="w-16 text-center">Ordem</TableHead>
                 <TableHead className="w-4">Excluir</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {visibleExistingTasks.length === 0 && tasksToAdd.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={2} className="text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
                     Nenhuma tarefa.
                   </TableCell>
                 </TableRow>
               )}
-              {visibleExistingTasks.map((task) => (
+              {visibleExistingTasks.map((task, index) => (
                 <TableRow key={task.id}>
+                  <TableCell className="wrap-break-word min-w-0">
+                    <span>{task.text}</span>
+                  </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <span>{task.text}</span>
-                      {task.modelId && (
-                        <span className="text-xs text-muted-foreground">
-                          Modelo: {models.find((m) => m.id === task.modelId)?.subject}
-                        </span>
-                      )}
+                    <Select
+                      value={
+                        task.id in taskModelOverrides
+                          ? (taskModelOverrides[task.id] ?? "none")
+                          : (task.modelId ?? "none")
+                      }
+                      onValueChange={(val) => handleTaskModelOverride(task.id, val)}
+                    >
+                      <SelectTrigger className="h-7 text-xs w-full">
+                        <SelectValue placeholder="Nenhum" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhum</SelectItem>
+                        {models.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.subject}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        className="p-0.5 hover:text-foreground text-muted-foreground disabled:opacity-30"
+                        onClick={() => moveExisting(index, -1)}
+                        disabled={index === 0}
+                        type="button"
+                      >
+                        <ArrowUp className="size-3.5" />
+                      </button>
+                      <button
+                        className="p-0.5 hover:text-foreground text-muted-foreground disabled:opacity-30"
+                        onClick={() => moveExisting(index, 1)}
+                        disabled={index === visibleExistingTasks.length - 1}
+                        type="button"
+                      >
+                        <ArrowDown className="size-3.5" />
+                      </button>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -166,14 +257,33 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
               ))}
               {tasksToAdd.map((task, index) => (
                 <TableRow key={`new-${index}`}>
+                  <TableCell className="wrap-break-word min-w-0">
+                    <span className="text-muted-foreground italic">{task.text} (nova)</span>
+                    {task.modelId && (
+                      <span className="block text-xs text-muted-foreground">
+                        Modelo: {models.find((m) => m.id === task.modelId)?.subject}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell />
                   <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-muted-foreground italic">{task.text} (nova)</span>
-                      {task.modelId && (
-                        <span className="text-xs text-muted-foreground">
-                          Modelo: {models.find((m) => m.id === task.modelId)?.subject}
-                        </span>
-                      )}
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        className="p-0.5 hover:text-foreground text-muted-foreground disabled:opacity-30"
+                        onClick={() => moveNew(index, -1)}
+                        disabled={index === 0}
+                        type="button"
+                      >
+                        <ArrowUp className="size-3.5" />
+                      </button>
+                      <button
+                        className="p-0.5 hover:text-foreground text-muted-foreground disabled:opacity-30"
+                        onClick={() => moveNew(index, 1)}
+                        disabled={index === tasksToAdd.length - 1}
+                        type="button"
+                      >
+                        <ArrowDown className="size-3.5" />
+                      </button>
                     </div>
                   </TableCell>
                   <TableCell>

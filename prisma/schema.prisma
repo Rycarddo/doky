@@ -271,14 +271,15 @@ model UserCaixa {
 }
 
 model Task {
-  id        String          @id @default(uuid())
-  text      String
-  done      Boolean         @default(false)
-  priority  ProcessPriority @default(NORMAL)
-  deadline  DateTime?
-  caixa     CaixaType       @default(OCNO)
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  id          String          @id @default(uuid())
+  text        String
+  done        Boolean         @default(false)
+  priority    ProcessPriority @default(NORMAL)
+  deadline    DateTime?
+  scheduledAt DateTime?
+  caixa       CaixaType       @default(OCNO)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   responsibleId String
   responsible   User   @relation("TaskResponsible", fields: [responsibleId], references: [id])

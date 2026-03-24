@@ -57,9 +57,11 @@ export function TrackerDialogShell({
               style={{
                 fontSize: "1.125rem",
                 fontWeight: 600,
-                lineHeight: 1,
+                lineHeight: 1.4,
                 color: "var(--foreground)",
                 paddingRight: "1.5rem",
+                overflowWrap: "break-word",
+                wordBreak: "break-word",
               }}
             >
               {title}

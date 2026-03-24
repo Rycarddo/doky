@@ -417,31 +417,31 @@ export const EditProcess = ({ document }: EditProcessProps) => {
                 />
               </Label>
 
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <Label>Prioridade</Label>
-                  <Select value={priority} onValueChange={setPriority}>
-                    <SelectTrigger className="w-full mt-1">
-                      <SelectValue placeholder="Selecione a prioridade..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Prioridade</SelectLabel>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="alta">Alta</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Label className="flex-1">
-                  Assunto*
-                  <Input
-                    required
-                    placeholder="Ex: Modelo Operacional RDO SBHT"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                  />
-                </Label>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="edit-subject">Assunto*</Label>
+                <Input
+                  id="edit-subject"
+                  required
+                  placeholder="Ex: Modelo Operacional RDO SBHT"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                />
+              </div>
+
+              <div className="flex-1">
+                <Label>Prioridade</Label>
+                <Select value={priority} onValueChange={setPriority}>
+                  <SelectTrigger className="w-full mt-1">
+                    <SelectValue placeholder="Selecione a prioridade..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Prioridade</SelectLabel>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="alta">Alta</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
 
               <Deadline date={deadline} onDateChange={setDeadline} />

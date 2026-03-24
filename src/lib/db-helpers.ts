@@ -146,6 +146,7 @@ export const processInclude = {
     include: {
       trackerTask: { select: { title: true, documentTemplateId: true } },
     },
+    orderBy: { trackerTask: { order: "asc" as const } },
   },
 };
 
@@ -272,6 +273,7 @@ export const ocomInclude = {
     include: {
       trackerTask: { select: { title: true, documentTemplateId: true } },
     },
+    orderBy: { trackerTask: { order: "asc" as const } },
   },
   changeLog: {
     include: { user: { select: { name: true } } },

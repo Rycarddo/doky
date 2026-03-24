@@ -54,7 +54,7 @@ type AppContextType = {
   updateTrackerModel: (trackerId: string, modelId: string | undefined) => Promise<void>;
   updateTrackerTaskModel: (trackerId: string, taskId: string, modelId: string | undefined) => Promise<void>;
   toggleTrackerTask: (trackerId: string, taskId: string) => Promise<void>;
-  editTracker: (trackerId: string, subject: string, tasksToAdd: { text: string; modelId?: string }[], taskIdsToDelete: string[]) => Promise<void>;
+  editTracker: (trackerId: string, subject: string, tasksToAdd: { text: string; modelId?: string }[], taskIdsToDelete: string[], taskOrder?: string[], taskModelUpdates?: Record<string, string | null>) => Promise<void>;
   deleteTracker: (id: string) => Promise<void>;
   // Models
   models: Model[];
@@ -245,11 +245,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const editTracker = async (trackerId: string, subject: string, tasksToAdd: { text: string; modelId?: string }[], taskIdsToDelete: string[]) => {
+  const editTracker = async (trackerId: string, subject: string, tasksToAdd: { text: string; modelId?: string }[], taskIdsToDelete: string[], taskOrder?: string[], taskModelUpdates?: Record<string, string | null>) => {
     const res = await fetch(`/api/trackers/${trackerId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject, tasksToAdd, taskIdsToDelete }),
+      body: JSON.stringify({ subject, tasksToAdd, taskIdsToDelete, taskOrder, taskModelUpdates }),
     });
     const updated: Tracker = await res.json();
     setTrackers((prev) => prev.map((t) => (t.id === trackerId ? updated : t)));

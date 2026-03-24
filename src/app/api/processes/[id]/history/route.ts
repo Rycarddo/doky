@@ -11,15 +11,21 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const user = await getCurrentUser();
 
-  const entry = await prisma.processHistory.create({
-    data: {
-      text,
-      sigad: sigad || null,
-      processId: id,
-      creatorId: user.id,
-    },
-    include: { creator: { select: { name: true } } },
-  });
+  const [entry] = await prisma.$transaction([
+    prisma.processHistory.create({
+      data: {
+        text,
+        sigad: sigad || null,
+        processId: id,
+        creatorId: user.id,
+      },
+      include: { creator: { select: { name: true } } },
+    }),
+    prisma.process.update({
+      where: { id },
+      data: { updatedAt: new Date() },
+    }),
+  ]);
 
   broadcast("processes");
   return NextResponse.json(

@@ -19,7 +19,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
-  const { modelId, subject, tasksToAdd, taskIdsToDelete } = await req.json();
+  const { modelId, subject, tasksToAdd, taskIdsToDelete, taskOrder, taskModelUpdates } = await req.json();
 
   // Delete removed tasks (ProcessTask cascades automatically)
   if (taskIdsToDelete?.length) {
@@ -28,14 +28,42 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     });
   }
 
+  // Update task order for existing tasks
+  if (taskOrder?.length) {
+    await Promise.all(
+      (taskOrder as string[]).map((taskId, index) =>
+        prisma.trackerTask.update({
+          where: { id: taskId, trackerId: id },
+          data: { order: index },
+        })
+      )
+    );
+  }
+
+  // Update model for existing tasks
+  if (taskModelUpdates && Object.keys(taskModelUpdates).length) {
+    await Promise.all(
+      Object.entries(taskModelUpdates as Record<string, string | null>).map(([taskId, mId]) =>
+        prisma.trackerTask.update({
+          where: { id: taskId, trackerId: id },
+          data: { documentTemplateId: mId ?? null },
+        })
+      )
+    );
+  }
+
   // Determine next order for new tasks
   let nextOrder = 0;
   if (tasksToAdd?.length) {
-    const existing = await prisma.trackerTask.findMany({
-      where: { trackerId: id },
-      select: { order: true },
-    });
-    nextOrder = existing.reduce((max, t) => Math.max(max, t.order), -1) + 1;
+    if (taskOrder?.length) {
+      nextOrder = taskOrder.length;
+    } else {
+      const existing = await prisma.trackerTask.findMany({
+        where: { trackerId: id },
+        select: { order: true },
+      });
+      nextOrder = existing.reduce((max, t) => Math.max(max, t.order), -1) + 1;
+    }
   }
 
   const data: Record<string, unknown> = {};
@@ -96,8 +124,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   broadcast("trackers");
-  // Tracker edits may rebuild process/ocom task rows
-  if (taskIdsToDelete?.length || tasksToAdd?.length) {
+  // Broadcast processes/ocom when task structure or task models change
+  if (taskIdsToDelete?.length || tasksToAdd?.length || taskOrder?.length || (taskModelUpdates && Object.keys(taskModelUpdates).length)) {
     broadcast("processes");
     broadcast("ocom");
   }

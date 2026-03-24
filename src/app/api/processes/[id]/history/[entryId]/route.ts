@@ -6,15 +6,21 @@ import { broadcast } from "@/lib/sse";
 type Params = { params: Promise<{ id: string; entryId: string }> };
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-  const { entryId } = await params;
+  const { id, entryId } = await params;
   const { text } = await req.json();
   const currentUser = await getCurrentUser();
 
-  const entry = await prisma.processHistory.update({
-    where: { id: entryId },
-    data: { text, creatorId: currentUser.id },
-    include: { creator: { select: { name: true } } },
-  });
+  const [entry] = await prisma.$transaction([
+    prisma.processHistory.update({
+      where: { id: entryId },
+      data: { text, creatorId: currentUser.id },
+      include: { creator: { select: { name: true } } },
+    }),
+    prisma.process.update({
+      where: { id },
+      data: { updatedAt: new Date() },
+    }),
+  ]);
 
   broadcast("processes");
   return NextResponse.json({
@@ -27,8 +33,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const { entryId } = await params;
-  await prisma.processHistory.delete({ where: { id: entryId } });
+  const { id, entryId } = await params;
+  await prisma.$transaction([
+    prisma.processHistory.delete({ where: { id: entryId } }),
+    prisma.process.update({ where: { id }, data: { updatedAt: new Date() } }),
+  ]);
   broadcast("processes");
   return new NextResponse(null, { status: 204 });
 }

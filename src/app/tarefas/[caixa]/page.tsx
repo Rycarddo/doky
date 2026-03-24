@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { ScheduledAtPicker } from "@/components/ScheduledAtPicker";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ type Task = {
   done: boolean;
   priority: "HIGH" | "NORMAL";
   deadline: string | null;
+  scheduledAt: string | null;
   responsible: TaskUser;
   creator: TaskUser;
   process: TaskProcess;
@@ -76,6 +78,7 @@ export default function TarefasCaixaPage() {
   const [newText, setNewText] = useState("");
   const [newPriority, setNewPriority] = useState<"Alta" | "Normal">("Normal");
   const [newDeadline, setNewDeadline] = useState("");
+  const [newScheduledAt, setNewScheduledAt] = useState("");
   const [newProcessId, setNewProcessId] = useState("");
 
   // Edit dialog
@@ -83,6 +86,7 @@ export default function TarefasCaixaPage() {
   const [editText, setEditText] = useState("");
   const [editPriority, setEditPriority] = useState<"Alta" | "Normal">("Normal");
   const [editDeadline, setEditDeadline] = useState("");
+  const [editScheduledAt, setEditScheduledAt] = useState("");
   const [editProcessId, setEditProcessId] = useState("");
 
   useEffect(() => {
@@ -109,6 +113,7 @@ export default function TarefasCaixaPage() {
         text: newText.trim(),
         priority: newPriority,
         deadline: newDeadline ? new Date(newDeadline).toLocaleDateString("pt-BR") : "",
+        scheduledAt: newScheduledAt || null,
         processId: newProcessId || null,
         caixa: caixaEnum,
       }),
@@ -119,6 +124,7 @@ export default function TarefasCaixaPage() {
     setNewText("");
     setNewPriority("Normal");
     setNewDeadline("");
+    setNewScheduledAt("");
     setNewProcessId("");
   };
 
@@ -142,6 +148,7 @@ export default function TarefasCaixaPage() {
     setEditText(task.text);
     setEditPriority(task.priority === "HIGH" ? "Alta" : "Normal");
     setEditDeadline(toInputDate(task.deadline));
+    setEditScheduledAt(task.scheduledAt ? task.scheduledAt.slice(0, 16) : "");
     setEditProcessId(task.process?.id ?? "");
   };
 
@@ -154,6 +161,7 @@ export default function TarefasCaixaPage() {
         text: editText.trim(),
         priority: editPriority,
         deadline: editDeadline ? new Date(editDeadline).toLocaleDateString("pt-BR") : "",
+        scheduledAt: editScheduledAt || null,
         processId: editProcessId || null,
       }),
     });
@@ -213,6 +221,7 @@ export default function TarefasCaixaPage() {
                 Prazo
                 <Input type="date" value={newDeadline} onChange={(e) => setNewDeadline(e.target.value)} />
               </Label>
+              <ScheduledAtPicker value={newScheduledAt} onChange={setNewScheduledAt} />
               <div>
                 <Label className="my-2">Processo vinculado (opcional)</Label>
                 <Select
@@ -318,6 +327,11 @@ export default function TarefasCaixaPage() {
                     Prazo: {formatDeadline(task.deadline)}
                   </span>
                 )}
+                {task.scheduledAt && (
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                    ⏰ {new Date(task.scheduledAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                )}
                 {task.process && (
                   <span className="text-xs text-muted-foreground">
                     Processo: {task.process.subject}
@@ -355,6 +369,7 @@ export default function TarefasCaixaPage() {
                       Prazo
                       <Input type="date" value={editDeadline} onChange={(e) => setEditDeadline(e.target.value)} />
                     </Label>
+                    <ScheduledAtPicker value={editScheduledAt} onChange={setEditScheduledAt} />
                     <div>
                       <Label>Processo vinculado (opcional)</Label>
                       <Select

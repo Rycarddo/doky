@@ -9,7 +9,7 @@ if (!g._sseEmitter) {
 
 export const sseEmitter = g._sseEmitter;
 
-export type SseEvent = "processes" | "ocom" | "trackers" | "models";
+export type SseEvent = "processes" | "ocom" | "trackers" | "models" | "tasks";
 
 export function broadcast(event: SseEvent) {
   sseEmitter.emit("change", event);

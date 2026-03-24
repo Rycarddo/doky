@@ -127,3 +127,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ── Calendar: dot indicator for days with scheduled tasks ── */
+/* The modifier class is added to the <td> which already has position: relative */
+.rdp-has-task::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background-color: #3b82f6;
+  pointer-events: none;
+}
+
+/* When the task day is selected (button has data-selected-single="true"), make dot white */
+.rdp-has-task:has(button[data-selected-single="true"])::after {
+  background-color: var(--color-primary-foreground, white);
+}
