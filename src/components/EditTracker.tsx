@@ -183,13 +183,13 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
 
         <div className="flex flex-col gap-2">
           <Label className="text-sm">Tarefas</Label>
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
                 <TableHead>Tarefa</TableHead>
                 <TableHead className="w-48">Modelo</TableHead>
                 <TableHead className="w-16 text-center">Ordem</TableHead>
-                <TableHead className="w-4">Excluir</TableHead>
+                <TableHead className="w-8">Excluir</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -202,7 +202,7 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
               )}
               {visibleExistingTasks.map((task, index) => (
                 <TableRow key={task.id}>
-                  <TableCell className="wrap-break-word min-w-0">
+                  <TableCell className="wrap-break-word min-w-0 whitespace-normal">
                     <span>{task.text}</span>
                   </TableCell>
                   <TableCell>
@@ -257,7 +257,7 @@ export const EditTracker = ({ tracker }: EditTrackerProps) => {
               ))}
               {tasksToAdd.map((task, index) => (
                 <TableRow key={`new-${index}`}>
-                  <TableCell className="wrap-break-word min-w-0">
+                  <TableCell className="wrap-break-word min-w-0 whitespace-normal">
                     <span className="text-muted-foreground italic">{task.text} (nova)</span>
                     {task.modelId && (
                       <span className="block text-xs text-muted-foreground">

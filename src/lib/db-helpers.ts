@@ -56,11 +56,11 @@ export function mapProcessToAppDocument(p: ProcessFromDB): AppDocument {
     sigad: p.sigad,
     priority: p.priority === "HIGH" ? "Alta" : "Normal",
     subject: p.subject,
-    beginning: p.createdAt.toLocaleDateString("pt-BR"),
+    beginning: p.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Manaus" }),
     user: p.creator.name,
     status: p.status === "DONE" ? "Finalizado" : "Em andamento",
-    lastUpdate: p.updatedAt.toLocaleDateString("pt-BR"),
-    deadline: p.deadline ? p.deadline.toLocaleDateString("pt-BR") : "",
+    lastUpdate: p.updatedAt.toLocaleDateString("pt-BR", { timeZone: "America/Manaus" }),
+    deadline: p.deadline ? p.deadline.toLocaleDateString("pt-BR", { timeZone: "America/Manaus" }) : "",
     linkedProcess: p.linkedProcess ?? "",
     trackerId: p.trackerId ?? undefined,
     trackerModelId: p.tracker?.documentTemplateId ?? undefined,
@@ -69,7 +69,7 @@ export function mapProcessToAppDocument(p: ProcessFromDB): AppDocument {
         id: h.id,
         text: h.text,
         sigad: h.sigad ?? p.sigad,
-        date: (h.updatedAt ?? h.createdAt).toLocaleString("pt-BR"),
+        date: (h.updatedAt ?? h.createdAt).toLocaleString("pt-BR", { timeZone: "America/Manaus" }),
         user: h.creator.name,
       })
     ),
@@ -104,7 +104,7 @@ export function mapTrackerFromDB(t: TrackerFromDB): Tracker {
     subject: t.name,
     caixa: t.caixa,
     modelId: t.documentTemplateId ?? undefined,
-    updatedAt: t.createdAt.toLocaleDateString("pt-BR"),
+    updatedAt: t.createdAt.toLocaleDateString("pt-BR", { timeZone: "America/Manaus" }),
     tasks: t.tasks
       .sort((a, b) => a.order - b.order)
       .map((task): TrackerTask => ({
@@ -130,7 +130,7 @@ export function mapModelFromDB(m: ModelFromDB): Model {
     subject: m.name,
     content: m.text,
     caixa: m.caixa,
-    updatedAt: m.updatedAt.toLocaleDateString("pt-BR"),
+    updatedAt: m.updatedAt.toLocaleDateString("pt-BR", { timeZone: "America/Manaus" }),
   };
 }
 
@@ -207,7 +207,7 @@ export function mapOcomFromDB(o: OcomFromDB): OcomProcess {
     localidade: o.localidade,
     empresa: o.empresa ?? "",
     situacao: o.situacao as OcomSituacao,
-    prazo: o.prazo ? o.prazo.toLocaleDateString("pt-BR") : "",
+    prazo: o.prazo ? o.prazo.toLocaleDateString("pt-BR", { timeZone: "America/Manaus" }) : "",
     anoInicio: o.anoInicio,
     observacoes: o.observacoes ?? undefined,
     trackerId: o.trackerId ?? undefined,
@@ -217,7 +217,7 @@ export function mapOcomFromDB(o: OcomFromDB): OcomProcess {
         id: h.id,
         text: h.text,
         estadoDoc: h.estadoDoc,
-        date: (h.updatedAt ?? h.createdAt).toLocaleString("pt-BR"),
+        date: (h.updatedAt ?? h.createdAt).toLocaleString("pt-BR", { timeZone: "America/Manaus" }),
         user: h.creator.name,
       })
     ),
@@ -232,7 +232,7 @@ export function mapOcomFromDB(o: OcomFromDB): OcomProcess {
     changeLog: o.changeLog.map(
       (c): OcomChangeLogEntry => ({
         id: c.id,
-        date: c.createdAt.toLocaleString("pt-BR"),
+        date: c.createdAt.toLocaleString("pt-BR", { timeZone: "America/Manaus" }),
         user: c.user.name,
         action: c.action,
         field: c.field ?? undefined,

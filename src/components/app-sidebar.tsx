@@ -12,6 +12,7 @@ import {
   BookUser,
   PhoneCall,
   Building2,
+  Activity,
 } from "lucide-react";
 
 import { DatePicker } from "@/components/date-picker";
@@ -85,6 +86,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       ...caixaGroups,
       { caixa: null, items: [{ href: "/contatos", label: "Contatos", icon: BookUser }] },
       ...(isAdmin ? [{ caixa: null, items: [{ href: "/admin", label: "Admin", icon: Shield }] }] : []),
+      { caixa: null, items: [{ href: "/status", label: "Status", icon: Activity }] },
     ];
   }, [isAdmin, userCaixas]);
 

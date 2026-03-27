@@ -142,11 +142,11 @@ export const RegisterNewTracker = ({ caixa }: { caixa?: string }) => {
 
         <Separator />
 
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
               <TableHead>Tarefa</TableHead>
-              <TableHead className="w-4">Excluir</TableHead>
+              <TableHead className="w-8">Excluir</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -159,7 +159,7 @@ export const RegisterNewTracker = ({ caixa }: { caixa?: string }) => {
             )}
             {tasks.map((task, index) => (
               <TableRow key={index}>
-                <TableCell>
+                <TableCell className="wrap-break-word min-w-0 whitespace-normal">
                   <div className="flex flex-col gap-1">
                     <span>{task.text}</span>
                     {task.modelId && (

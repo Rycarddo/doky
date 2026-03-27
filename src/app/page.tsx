@@ -79,7 +79,8 @@ const Home = () => {
         const matchesSearch =
           query === "" ||
           doc.sigad.toLowerCase().includes(query) ||
-          doc.subject.toLowerCase().includes(query);
+          doc.subject.toLowerCase().includes(query) ||
+          doc.history.some((h) => h.text.toLowerCase().includes(query));
 
         return matchesFilter && matchesSearch;
       })
